@@ -2,7 +2,19 @@
 name = "jsonprooftoken"
 version = "0.1.0"
 edition = "2021"
+license = "Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+serde = { version = "1.0.25", default_feature = false, features = ["derive", "serde_derive"] }
+serde_json = "1.0.59"
+
+
+[lib]
+name = "jsonprooftoken"
+path = "src/lib.rs"
+
+[[example]]
+name = "jpt"
+path = "examples/jpt.rs"
