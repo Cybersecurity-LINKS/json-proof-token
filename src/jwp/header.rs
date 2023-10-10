@@ -1,8 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::jpt::claims::JptClaims;
-
-use super::algs::JwpAlgorithm;
+use crate::{jpt::claims::JptClaims, jpa::algs::ProofAlgorithm};
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct IssuerProtectedHeader {
@@ -10,7 +8,7 @@ pub struct IssuerProtectedHeader {
     #[serde(skip_serializing_if = "Option::is_none")]
     typ: Option<String>,
     /// Algorithm used for the JWP
-    alg: JwpAlgorithm,
+    alg: ProofAlgorithm,
     /// Who issued the JWP
     #[serde(skip_serializing_if = "Option::is_none")]
     iss: Option<String>,

@@ -2,9 +2,11 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 #[allow(non_camel_case_types)]
-pub enum JwpAlgorithm {
-#[serde(rename = "BBS-X")]
+pub enum ProofAlgorithm {
+  #[serde(rename = "BBS-X")]
   BBS_X,
+  #[serde(rename = "SU-ES256")]
+  SU_ES256,
   #[serde(rename = "MAC-H256")]
   MAC_H256,
   #[serde(rename = "MAC-H384")]

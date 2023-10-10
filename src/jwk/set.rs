@@ -13,6 +13,6 @@ impl JwkSet {
     pub fn find(&self, kid: &str) -> Option<&Jwk> {
         self.keys
             .iter()
-            .find(|jwk| jwk.key_id.is_some() && jwk.key_id.as_ref().unwrap() == kid)
+            .find(|jwk| jwk.kid.is_some() && jwk.kid.as_ref().unwrap() == kid)
     }
 }
