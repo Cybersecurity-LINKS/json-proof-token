@@ -4,7 +4,7 @@ use crate::jpt::claims::JptClaims;
 
 use super::algs::JwpAlgorithm;
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct IssuerProtectedHeader {
     /// JWP type (JPT)
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -22,7 +22,7 @@ pub struct IssuerProtectedHeader {
     claims: Option<JptClaims>
 }
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct PresentationProtectedHeader {
     /// Who have to receive the JPT.
     #[serde(skip_serializing_if = "Option::is_none")]
