@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use jsonprooftoken::jpt::claims::JptClaims;
+use jsonprooftoken::{jpt::claims::JptClaims, jwp::{header::IssuerProtectedHeader, issued::JwpIssuedForm}, jpa::algs::ProofAlgorithm};
 use serde::Serialize;
 use serde_json::Value;
 
@@ -46,6 +46,17 @@ fn main() {
 
     println!("Claims: {:?}", claims);
     println!("Payloads: {:?}", payloads);
+
+
+    let issued_header = IssuerProtectedHeader{
+        typ: Some("JPT".to_owned()),
+        alg: ProofAlgorithm::BLS12381_SHA256,
+        iss: None,
+        cid: None,
+        claims: Some(claims),
+    };
+
+    let issued_jwp = JwpIssuedForm::new(issued_header, payloads);
 
 
     // let original = JptClaims::reconstruct_json_value(claims);

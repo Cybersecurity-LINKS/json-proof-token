@@ -49,7 +49,6 @@ impl JptClaims {
 
         let jptclaims_json_value = serde_json::to_value(self).unwrap();
             
-            
         let flattened = Flattener::new()
         .set_key_separator(".")
         .set_array_formatting(ArrayFormatting::Surrounded {
