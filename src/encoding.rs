@@ -38,3 +38,18 @@ impl Base64UrlDecodedSerializable {
         serde_json::from_slice(&self.base64url_decoded).unwrap()
     }
 }
+
+
+
+pub struct EncondingKey {
+    //TODO: family attribute implement something like this
+    //             ProofAlgorithm::EdDSA => AlgorithmFamily::Ed,
+    //             ProofAlgorithm::BBS_X (or BBS_BLS12381_SHA256, BBS_BLS12381_SHAKE256) => AlgorithmFamily::Bls12381
+}
+
+//TODO: implement From<Jwk> trait that transform a Jwk into and EncodingKey
+//es. if crv
+
+pub struct DecondingKey {
+
+}

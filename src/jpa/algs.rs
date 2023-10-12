@@ -3,8 +3,12 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 #[allow(non_camel_case_types)]
 pub enum ProofAlgorithm {
-  #[serde(rename = "BBS-X")]
-  BBS_X,
+  // BBS_X, //TODO: probably create two algorithms (BLS12381_SHA256 and BLS12381_SHAKE256)
+  #[serde(rename = "BBS-BLS12381-SHA256")]
+  BLS12381_SHA256,
+  #[serde(rename = "BBS-BLS12381-SHAKE256")]
+  BLS12381_SHAKE256,
+
   #[serde(rename = "SU-ES256")]
   SU_ES256,
   #[serde(rename = "MAC-H256")]
@@ -20,3 +24,14 @@ pub enum ProofAlgorithm {
   #[serde(rename = "MAC-H256K")]
   MAC_H256K
 }
+
+
+
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Serialize, Deserialize)]
+pub(crate) enum AlgorithmFamily {
+    Hmac,
+    Rsa,
+    Ec,
+    Ed,
+}
+
