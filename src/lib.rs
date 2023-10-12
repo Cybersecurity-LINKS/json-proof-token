@@ -4,4 +4,5 @@ pub mod jwp;
 pub mod jwk;
 pub mod errors;
 pub mod validation;
-pub(crate) mod encoding;
+pub mod encoding;
+pub(crate) mod flattening;

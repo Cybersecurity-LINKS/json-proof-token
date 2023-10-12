@@ -2,18 +2,24 @@ use data_encoding::BASE64URL_NOPAD;
 use serde::{Deserialize, Serialize};
 
 
-pub(crate) fn base64url_encode<T: AsRef<[u8]>>(bytes: T) -> String {
+pub enum SerializationType {
+    COMPACT,
+    JSON
+}
+
+
+pub fn base64url_encode<T: AsRef<[u8]>>(bytes: T) -> String {
     BASE64URL_NOPAD.encode(bytes.as_ref())
 }
 
 
-pub(crate) fn base64url_decode<T: AsRef<[u8]>>(bytes: T) -> Vec<u8> {
+pub fn base64url_decode<T: AsRef<[u8]>>(bytes: T) -> Vec<u8> {
     BASE64URL_NOPAD.decode(bytes.as_ref()).unwrap()
 }
 
 
 // Encodes a struct in base64url
-pub(crate) fn base64url_encode_serializable<T: Serialize>(value: T) -> String{
+pub fn base64url_encode_serializable<T: Serialize>(value: T) -> String{
     let bytes = serde_json::to_vec(&value).unwrap();
     base64url_encode(bytes)
 }

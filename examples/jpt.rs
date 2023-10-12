@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use jsonprooftoken::{jpt::claims::JptClaims, jwp::{header::IssuerProtectedHeader, issued::JwpIssuedForm}, jpa::algs::ProofAlgorithm};
+use jsonprooftoken::{jpt::claims::JptClaims, jwp::{header::IssuerProtectedHeader, issued::JwpIssuedForm}, jpa::algs::ProofAlgorithm, encoding::{base64url_encode, SerializationType}};
 use serde::Serialize;
 use serde_json::Value;
 
@@ -26,19 +26,24 @@ fn main() {
     //     })),
     // };
 
-    let jpt_claims = JptClaims {
-        sub: Some("user123".to_string()),
-        exp: Some(1633756800),
-        nbf: None,
-        iat: None,
-        jti: None,
-        custom: Some(serde_json::json!({
-            "family_name": "Doe",
-            "given_name": "Jay",
-            "email": "jaydoe@example.org",
-            "age": 42
-        }))
-    };
+   
+    let custom_claims = serde_json::json!({
+        "family_name": "Doe",
+        "given_name": "Jay",
+        "email": "jaydoe@example.org",
+        "age": 42
+    });
+
+
+
+    let mut jpt_claims = JptClaims::new();
+    // jpt_claims.add_claim("family_name", "Doe");
+    // jpt_claims.add_claim("given_name", "Jay");
+    // jpt_claims.add_claim("email", "jaydoe@example.org");
+    // jpt_claims.add_claim("age", 42);
+    jpt_claims.add_claim("", custom_claims, true);
+
+
 
     
     println!("{:?}", jpt_claims);
@@ -50,13 +55,15 @@ fn main() {
 
     let issued_header = IssuerProtectedHeader{
         typ: Some("JPT".to_owned()),
-        alg: ProofAlgorithm::BLS12381_SHA256,
-        iss: None,
+        alg: ProofAlgorithm::BBS_X,
+        iss: Some("https://issuer.example".to_owned()),
         cid: None,
         claims: Some(claims),
     };
 
     let issued_jwp = JwpIssuedForm::new(issued_header, payloads);
+
+    println!("JWP: {}", issued_jwp.encode(SerializationType::COMPACT));
 
 
     // let original = JptClaims::reconstruct_json_value(claims);

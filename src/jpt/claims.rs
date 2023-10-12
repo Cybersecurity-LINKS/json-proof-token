@@ -1,9 +1,11 @@
 use std::collections::{HashMap, BTreeMap};
 use flatten_json_object::{Flattener, ArrayFormatting};
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, Map};
 
-use crate::encoding::base64url_encode_serializable;
+
+use crate::flattening::json_value_flattening;
 
 use super::payloads::Payloads;
 
@@ -35,38 +37,80 @@ pub struct JptClaims {
     /// Unique ID for the JPT.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub jti: Option<String>,
-    /// Other claims (age, name, surname, ...)
-    #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    // custom: Option<Vec<String>>
-    pub custom: Option<Value>
+    // Other claims (age, name, surname, ...)
+    // #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    // pub custom: Option<Value>
+    #[serde(flatten)]
+    pub custom: IndexMap<String, Value>
 }
 
 
 impl JptClaims {
 
+    pub fn new() -> Self {
+        Self { 
+            sub: None,
+            exp: None, 
+            nbf: None, 
+            iat: None, 
+            jti: None, 
+            custom: IndexMap::new() }
+    }
+
+    pub fn set_sub(&mut self, value: String) {
+        self.sub = Some(value);
+    }
+
+    pub fn set_exp(&mut self, value: i64) {
+        self.exp = Some(value);
+    }
+
+    pub fn set_nbf(&mut self, value: i64) {
+        self.nbf = Some(value);
+    }
+
+    pub fn set_iat(&mut self, value: i64) {
+        self.iat = Some(value);
+    }
+
+    pub fn set_jti(&mut self, value: String) {
+        self.jti = Some(value);
+    }
+
+    pub fn add_claim<T: Serialize>(&mut self, claim: &str, value: T, flattened: bool) {
+        let serde_value = serde_json::to_value(value).unwrap();
+        if flattened {
+            self.custom.extend(json_value_flattening(serde_value));
+            // json_value_flattening(serde_value).iter().for_each(|(k, v)| self.custom.insert(k, v))
+        } else {
+            self.custom.insert(claim.to_owned(), serde_value);
+        }
+        
+    }
+
     /// Extracts claims and payloads into separate vectors.
     pub fn get_claims_and_payloads(&self) -> (Claims, Payloads){
 
         let jptclaims_json_value = serde_json::to_value(self).unwrap();
-            
-        let flattened = Flattener::new()
-        .set_key_separator(".")
-        .set_array_formatting(ArrayFormatting::Surrounded {
-            start: "[".to_string(),
-            end: "]".to_string()
-        })
-        .set_preserve_empty_arrays(false)
-        .set_preserve_empty_objects(false)
-        .flatten(&jptclaims_json_value).unwrap();
+        let claim_payloads_pairs = json_value_flattening(jptclaims_json_value);     
+        // let flattened = Flattener::new()
+        // .set_key_separator(".")
+        // .set_array_formatting(ArrayFormatting::Surrounded {
+        //     start: "[".to_string(),
+        //     end: "]".to_string()
+        // })
+        // .set_preserve_empty_arrays(false)
+        // .set_preserve_empty_objects(false)
+        // .flatten(&jptclaims_json_value).unwrap();
 
-        println!("flatted: {}", flattened);
+        // println!("flattened: {}", flattened);
 
         
-        let claim_payload_pairs: HashMap<String, Value> = serde_json::from_value::<HashMap<String, Value>>(flattened.clone()).unwrap();
+        // let claim_payload_pairs: IndexMap<String, Value> = serde_json::from_value::<IndexMap<String, Value>>(flattened.clone()).unwrap();
 
-        let (keys, values): (Vec<String>, Vec<Value>) = claim_payload_pairs.into_iter().unzip();
+        let (keys, values): (Vec<String>, Vec<Value>) = claim_payloads_pairs.into_iter().unzip();
 
-        (Claims(keys), Payloads::from_values(values))
+        (Claims(keys), Payloads::new_from_values(values))
         
     }
 

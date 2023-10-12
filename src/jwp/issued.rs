@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, ser::SerializeMap};
 
-use crate::jpt::{payloads::Payloads, claims::Claims};
+use crate::{jpt::{payloads::{Payloads, PayloadType}, claims::Claims}, encoding::{base64url_encode, base64url_encode_serializable, SerializationType}};
 
 use super::header::IssuerProtectedHeader;
 
@@ -18,8 +18,29 @@ impl JwpIssuedForm {
         Self { issuer_protected_header, payloads, proof: None }
     }
 
-    pub fn encode() {
-        todo!()
+    //TODO: here should be pass as parameter the JWK used to generate the proof and inside we call the generate_proof method
+    pub fn encode(&self, serialization: SerializationType) -> String{
+
+        let jwp = match serialization {
+            SerializationType::COMPACT => {
+                let encoded_issuer_header = base64url_encode_serializable(&self.issuer_protected_header);
+                let encoded_payloads = self.payloads.0.iter().map(|p| {
+                    if p.1 == PayloadType::Undisclosed {
+                        "".to_string()
+                    } else {
+                        p.0.clone()
+                    }
+                })
+                .collect::<Vec<String>>()
+                .join("~");
+
+                format!("{}.{}.{}", encoded_issuer_header, encoded_payloads, "")
+                
+            },
+            SerializationType::JSON => todo!(),
+        };
+        
+        jwp
     }
 
     pub fn generate_proof() {

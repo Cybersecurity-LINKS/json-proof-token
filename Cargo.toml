@@ -8,9 +8,11 @@ license = "Apache-2.0"
 
 [dependencies]
 serde = { version = "1.0.25", default_feature = false, features = ["derive", "serde_derive"] }
-serde_json = "1.0.59"
+serde_json = {version = "1.0.59", features = ["preserve_order"]}
 flatten-json-object = "0.6.1"
 data-encoding = "2.4.0"
+indexmap = {version = "2.0.2", features = ["serde"]}
+thiserror = "1.0.30"
 
 
 [lib]

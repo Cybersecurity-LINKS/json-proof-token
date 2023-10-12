@@ -3,7 +3,10 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 #[allow(non_camel_case_types)]
 pub enum ProofAlgorithm {
-  // BBS_X, //TODO: probably create two algorithms (BLS12381_SHA256 and BLS12381_SHAKE256)
+  #[serde(rename = "BBS-X")]
+  BBS_X, 
+  ///TODO: we need two algorithms (BLS12381_SHA256 and BLS12381_SHAKE256) instead of 
+  /// just BBS-X to distinguish between the two ciphersuites
   #[serde(rename = "BBS-BLS12381-SHA256")]
   BLS12381_SHA256,
   #[serde(rename = "BBS-BLS12381-SHAKE256")]
