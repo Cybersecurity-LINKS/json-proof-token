@@ -1,2 +1,2 @@
-pub mod bbs_x;
+pub mod bbs_plus;
 pub mod algs;

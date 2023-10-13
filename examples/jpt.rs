@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use jsonprooftoken::{jpt::claims::JptClaims, jwp::{header::IssuerProtectedHeader, issued::JwpIssuedForm}, jpa::algs::ProofAlgorithm, encoding::{base64url_encode, SerializationType}};
+use jsonprooftoken::{jpt::claims::JptClaims, jwp::{header::IssuerProtectedHeader, issued::JwpIssuedForm}, jpa::algs::ProofAlgorithm, encoding::{base64url_encode, SerializationType}, jwk::{key::Jwk, types::KeyPairSubtype}};
 use serde::Serialize;
 use serde_json::Value;
 
@@ -55,15 +55,23 @@ fn main() {
 
     let issued_header = IssuerProtectedHeader{
         typ: Some("JPT".to_owned()),
-        alg: ProofAlgorithm::BBS_X,
+        alg: ProofAlgorithm::BLS12381_SHA256,
         iss: Some("https://issuer.example".to_owned()),
         cid: None,
         claims: Some(claims),
     };
 
-    let issued_jwp = JwpIssuedForm::new(issued_header, payloads);
+    println!("Issued Header: {:?}", issued_header);
 
-    println!("JWP: {}", issued_jwp.encode(SerializationType::COMPACT));
+    let issued_jwp = JwpIssuedForm::new(issued_header,payloads);
+
+
+
+    let bbs_jwk = Jwk::generate(KeyPairSubtype::BLS12381SHA256).unwrap();
+    println!("BBS Jwk: {:?}", bbs_jwk);
+    
+    println!("JWP: {}", issued_jwp.encode(SerializationType::COMPACT, &bbs_jwk).unwrap());
+
 
 
     // let original = JptClaims::reconstruct_json_value(claims);

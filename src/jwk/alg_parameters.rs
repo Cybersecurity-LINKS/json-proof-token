@@ -1,10 +1,11 @@
 use serde::{Deserialize, Serialize};
+use crate::jwk::alg_parameters::JwkAlgorithmParameters::OctetKeyPair;
 
-use crate::jpa::algs::ProofAlgorithm;
+use crate::{jpa::algs::ProofAlgorithm, encoding::base64url_encode};
 
-use super::{types::KeyType, curves::EllipticCurveTypes};
+use super::{types::KeyType, curves::EllipticCurveTypes, key::Jwk};
 
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 pub enum Algorithm {
     Proof(ProofAlgorithm),
 
@@ -40,16 +41,23 @@ pub struct JwkOctetKeyPairParameters {
     pub d: Option<String>,
 }
 
-
 impl JwkOctetKeyPairParameters {
 
-    pub fn new(crv: EllipticCurveTypes, x: String, d: Option<String> ) -> Self{
+    pub fn gen() -> Jwk {
+        let o = Self::new(EllipticCurveTypes::Bls12_381, "kpw", None);
+        Jwk { kid: None, pk_use: None, key_ops: None, alg: None, x5u: None, x5c: None, x5t: None, key_params: OctetKeyPair(o) }
+    }
+
+    pub fn new<T: AsRef<[u8]>>(crv: EllipticCurveTypes, x: T, d: Option<T> ) -> Self{
 
         Self{
             kty: KeyType::OctetKeyPair,
             crv: crv,
-            x: x,
-            d: d
+            x: base64url_encode(x),
+            d: match d {
+                Some(d) => Some(base64url_encode(d)),
+                None => None
+            }
         }
 
     }

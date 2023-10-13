@@ -13,3 +13,9 @@ pub enum KeyType {
     OctetKeyPair,
 }
 
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Copy, Clone)]
+pub enum KeyPairSubtype {
+    BLS12381SHA256,
+    BLS12381SHAKE256
+}
+
