@@ -1,8 +1,34 @@
 use serde::{Deserialize, Serialize, ser::SerializeMap};
 
-use crate::{jpt::{payloads::{Payloads, PayloadType}, claims::Claims}, encoding::{base64url_encode, base64url_encode_serializable, SerializationType}, jwk::key::Jwk, jpa::{bbs_plus::BBSplusAlgorithm, algs::ProofAlgorithm}, errors::CustomError};
+use crate::{jpt::{payloads::{Payloads, PayloadType}, claims::Claims}, encoding::{base64url_encode, base64url_encode_serializable, SerializationType, Base64UrlDecodedSerializable, self}, jwk::key::Jwk, jpa::{bbs_plus::BBSplusAlgorithm, algs::ProofAlgorithm}, errors::CustomError};
 
 use super::header::IssuerProtectedHeader;
+
+
+/// Takes the result of a rsplit and ensure we only get 3 parts (JwpIssued)
+/// Errors if we don't
+macro_rules! expect_three {
+    ($iter:expr) => {{
+        let mut i = $iter;
+        match (i.next(), i.next(), i.next()) {
+            (Some(first), Some(second), Some(third)) => (first, second, third),
+            _ => return Err(CustomError::InvalidIssuedJwp),
+        }
+    }};
+}
+
+
+/// Takes the result of a rsplit and ensure we only get 4 parts (JwpPresented)
+/// Errors if we don't
+macro_rules! expect_four {
+    ($iter:expr) => {{
+        let mut i = $iter;
+        match (i.next(), i.next(), i.next(), i.next()) {
+            (Some(first), Some(second), Some(third), Some(fourth)) => (first, second, third, fourth),
+            _ => return Err(new_error(ErrorKind::InvalidToken)),
+        }
+    }};
+}
 
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
@@ -22,18 +48,7 @@ impl JwpIssuedForm {
     pub fn encode(&self, serialization: SerializationType, key: &Jwk) -> Result<String, CustomError> {
         let encoded_issuer_header = base64url_encode_serializable(&self.issuer_protected_header);
 
-        let proof = match self.issuer_protected_header.alg {
-            ProofAlgorithm::BLS12381_SHA256 | ProofAlgorithm::BLS12381_SHAKE256 => {
-                base64url_encode(BBSplusAlgorithm::generate_issuer_proof(self.issuer_protected_header.alg, &self.payloads, &key, &encoded_issuer_header)?)
-            },
-            ProofAlgorithm::SU_ES256 => todo!(),
-            ProofAlgorithm::MAC_H256 => todo!(),
-            ProofAlgorithm::MAC_H384 => todo!(),
-            ProofAlgorithm::MAC_H512 => todo!(),
-            ProofAlgorithm::MAC_K25519 => todo!(),
-            ProofAlgorithm::MAC_K448 => todo!(),
-            ProofAlgorithm::MAC_H256K => todo!(),
-        };
+        let proof = Self::generate_proof(self.issuer_protected_header.alg, key, &encoded_issuer_header, &self.payloads)?;
 
         let jwp = match serialization {
             SerializationType::COMPACT => {
@@ -58,8 +73,66 @@ impl JwpIssuedForm {
         Ok(jwp)
     }
 
-    pub fn generate_proof() {
-        todo!()
+    pub fn decode(encoded_jwp: String, serialization: SerializationType, key: &Jwk) -> Result<Self, CustomError>{
+        match serialization {
+            SerializationType::COMPACT => {
+                let (encoded_issuer_protected_header, encoded_payloads, encoded_proof) = expect_three!(encoded_jwp.splitn(3, '.')); 
+                println!("{} || {} || {}", encoded_issuer_protected_header, encoded_payloads, encoded_proof);
+                let issuer_protected_header: IssuerProtectedHeader = Base64UrlDecodedSerializable::from_serializable_values(encoded_issuer_protected_header).deserialize::<IssuerProtectedHeader>();
+                let payloads = Payloads(encoded_payloads.splitn(issuer_protected_header.claims.as_ref().unwrap().0.len(), "~").map(|v| {
+                    if v == "" {
+                        ("".to_string(), PayloadType::Undisclosed)
+                    } else {
+                        (v.to_string(), PayloadType::Disclosed)
+                    }
+                }).collect());
+
+                match Self::verify_proof(issuer_protected_header.alg, key, encoded_proof, encoded_issuer_protected_header, &payloads) {
+                    Ok(_) => {
+                        println!("Issued Proof Valid!!!!");
+                        Ok(Self{issuer_protected_header, payloads, proof: Some(encoded_proof.into())})
+                    },
+                    Err(e) => Err(e),
+                }            
+            },
+            SerializationType::JSON => todo!()
+        }
+        
+        // Base64UrlDecodedSerializable::deserialize(&'a self)
+    }
+
+    fn generate_proof(alg: ProofAlgorithm, key: &Jwk, encoded_issuer_header: &str,  payloads: &Payloads) -> Result<String, CustomError>{
+        let proof = match alg {
+            ProofAlgorithm::BLS12381_SHA256 | ProofAlgorithm::BLS12381_SHAKE256 => {
+                base64url_encode(BBSplusAlgorithm::generate_issuer_proof(alg, payloads, &key, &encoded_issuer_header)?)
+            },
+            ProofAlgorithm::SU_ES256 => todo!(),
+            ProofAlgorithm::MAC_H256 => todo!(),
+            ProofAlgorithm::MAC_H384 => todo!(),
+            ProofAlgorithm::MAC_H512 => todo!(),
+            ProofAlgorithm::MAC_K25519 => todo!(),
+            ProofAlgorithm::MAC_K448 => todo!(),
+            ProofAlgorithm::MAC_H256K => todo!(),
+        };
+
+        Ok(proof)
+    }
+
+    fn verify_proof(alg: ProofAlgorithm, key: &Jwk, proof: &str, encoded_issuer_header: &str, payloads: &Payloads) -> Result<(), CustomError> {
+        let check = match alg {
+            ProofAlgorithm::BLS12381_SHA256 | ProofAlgorithm::BLS12381_SHAKE256 => {
+                BBSplusAlgorithm::verify_issuer_proof(alg,  &key, proof, &encoded_issuer_header, payloads)
+            },
+            ProofAlgorithm::SU_ES256 => todo!(),
+            ProofAlgorithm::MAC_H256 => todo!(),
+            ProofAlgorithm::MAC_H384 => todo!(),
+            ProofAlgorithm::MAC_H512 => todo!(),
+            ProofAlgorithm::MAC_K25519 => todo!(),
+            ProofAlgorithm::MAC_K448 => todo!(),
+            ProofAlgorithm::MAC_H256K => todo!(),
+        };
+
+        check
     }
 
     pub fn get_issuer_protected_header(&self) -> &IssuerProtectedHeader {

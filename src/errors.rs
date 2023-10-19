@@ -9,5 +9,17 @@ pub enum CustomError {
     ProofVerificationError(String),
 
     #[error("Error during creation of a JWK")]
-    JwkGenerationError(String)
+    JwkGenerationError(String),
+
+    #[error("Issued Jwp NOT valid")]
+    InvalidIssuedJwp,
+
+    #[error("Presented Jwp NOT valid")]
+    InvalidPresentedJwp,
+
+    #[error("Issued Proof verification failed!")]
+    InvalidIssuedProof,
+
+    #[error("Presented Proof verification failed!")]
+    InvalidPresentedProof
 }

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
-use zkryptium::{keys::bbsplus_key::{BBSplusPublicKey, BBSplusSecretKey}, signatures::signature::Signature, utils::message::BBSplusMessage, schemes::algorithms::{BBS_BLS12381_SHA256, Scheme, BBS_BLS12381_SHAKE256}};
+use zkryptium::{keys::bbsplus_key::{BBSplusPublicKey, BBSplusSecretKey}, signatures::signature::{Signature, BBSplusSignature}, utils::message::BBSplusMessage, schemes::algorithms::{BBS_BLS12381_SHA256, Scheme, BBS_BLS12381_SHAKE256}};
 
-use crate::{jwk::{key::Jwk, utils::{check_alg_curve_compatibility}, alg_parameters::Algorithm}, jwp::header::IssuerProtectedHeader, errors::CustomError, encoding::base64url_decode, jpt::payloads::Payloads};
+use crate::{jwk::{key::Jwk, utils::{check_alg_curve_compatibility}, alg_parameters::{Algorithm, JwkAlgorithmParameters}}, jwp::header::IssuerProtectedHeader, errors::CustomError, encoding::base64url_decode, jpt::payloads::Payloads};
 
 use super::algs::ProofAlgorithm;
 
@@ -12,8 +12,8 @@ pub struct BBSplusAlgorithm{}
 impl BBSplusAlgorithm {
     pub fn generate_issuer_proof(alg: ProofAlgorithm, payloads: &Payloads, key: &Jwk, issuer_header: &str) -> Result<Vec<u8>, CustomError> {
         let key_params = match &key.key_params {
-            crate::jwk::alg_parameters::JwkAlgorithmParameters::OctetKeyPair(params) => {
-                if params.d.is_none(){
+            JwkAlgorithmParameters::OctetKeyPair(params) => {
+                if params.is_private() == false {
                     return Err(CustomError::ProofGenerationError("key is not compatible".to_string()))
                 }
                 params
@@ -53,8 +53,56 @@ impl BBSplusAlgorithm {
         }
     }
 
-    pub fn verify_issuer_proof(&self, ) -> Option<Vec<u8>> {
-        todo!()
+    pub fn verify_issuer_proof(alg: ProofAlgorithm, key: &Jwk, proof: &str, issuer_header: &str, payloads: &Payloads) -> Result<(), CustomError> {
+        let key_params = match &key.key_params {
+            JwkAlgorithmParameters::OctetKeyPair(params) => {
+                if params.is_public() == false {
+                    return Err(CustomError::ProofGenerationError("key is not compatible".to_string()))
+                }
+                params
+            },
+            _ => return Err(CustomError::ProofGenerationError("key is not compatible".to_string()))
+        };
+        
+        if check_alg_curve_compatibility(Algorithm::Proof(alg.clone()), key_params.crv.clone()) == false {
+            Err(CustomError::ProofGenerationError("key is not compatible".to_string()))
+        } else {
+            println!("x: {}", key_params.x);
+            let dec_pk = base64url_decode(&key_params.x);
+            println!("DEC PK: {:?}", dec_pk);
+            let pk = BBSplusPublicKey::from_bytes(&dec_pk);
+            // let sk = BBSplusSecretKey::from_bytes(&base64url_decode(key_params.d.as_ref().unwrap()));
+
+        
+            let proof = BBSplusSignature::from_bytes(base64url_decode(proof).as_slice().try_into().unwrap()).unwrap();
+            let check = match alg {
+                ProofAlgorithm::BLS12381_SHA256 => {
+                    let messages: Vec<BBSplusMessage> = payloads.0
+                    .iter()
+                    .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHA256 as Scheme>::Ciphersuite>(p.0.as_bytes(), None))
+                    .collect();
+                    let proof = Signature::<BBS_BLS12381_SHA256>::BBSplus(proof);
+                    proof.verify(&pk, Some(&messages), None, Some(issuer_header.as_bytes()))
+                    
+                },
+                ProofAlgorithm::BLS12381_SHAKE256 => {
+                    let messages: Vec<BBSplusMessage> = payloads.0
+                    .iter()
+                    .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHAKE256 as Scheme>::Ciphersuite>(p.0.as_bytes(), None))
+                    .collect();
+
+                    let proof = Signature::<BBS_BLS12381_SHAKE256>::BBSplus(proof);
+                    proof.verify(&pk, Some(&messages), None, Some(issuer_header.as_bytes()))  
+                },
+                _ => unreachable!()
+            };
+
+            match check {
+                true => Ok(()),
+                false => Err(CustomError::InvalidIssuedProof)
+                
+            }
+        }
     }
 
     pub fn generate_presentation_proof(&self) -> Option<Vec<u8>> {

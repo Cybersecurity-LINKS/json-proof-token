@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use jsonprooftoken::{jpt::claims::JptClaims, jwp::{header::IssuerProtectedHeader, issued::JwpIssuedForm}, jpa::algs::ProofAlgorithm, encoding::{base64url_encode, SerializationType}, jwk::{key::Jwk, types::KeyPairSubtype}};
+use jsonprooftoken::{jpt::claims::JptClaims, jwp::{header::IssuerProtectedHeader, issued::JwpIssuedForm}, jpa::algs::ProofAlgorithm, encoding::{base64url_encode, SerializationType}, jwk::{key::Jwk, types::KeyPairSubtype, alg_parameters::JwkAlgorithmParameters}};
 use serde::Serialize;
 use serde_json::Value;
 
@@ -64,15 +64,27 @@ fn main() {
     println!("Issued Header: {:?}", issued_header);
 
     let issued_jwp = JwpIssuedForm::new(issued_header,payloads);
-
+    println!("ISSUED JWP: \n{:?}", issued_jwp);
 
 
     let bbs_jwk = Jwk::generate(KeyPairSubtype::BLS12381SHA256).unwrap();
     println!("BBS Jwk: {:?}", bbs_jwk);
+
+    let mut bbs_jwk_pk = bbs_jwk.clone();
+    bbs_jwk_pk.key_params = match &bbs_jwk.key_params {
+        JwkAlgorithmParameters::OctetKeyPair(okp) => JwkAlgorithmParameters::OctetKeyPair(okp.to_public()),
+    };
     
-    println!("JWP: {}", issued_jwp.encode(SerializationType::COMPACT, &bbs_jwk).unwrap());
+    let compact_jwp = issued_jwp.encode(SerializationType::COMPACT, &bbs_jwk).unwrap();
+    println!("Compact JWP: {}", compact_jwp);
+
+    let decoded_jwp = JwpIssuedForm::decode(compact_jwp, SerializationType::COMPACT, &bbs_jwk_pk).unwrap();
+
+    println!("DECODED ISSUED JWP \n{:?}", decoded_jwp);
 
 
+
+    
 
     // let original = JptClaims::reconstruct_json_value(claims);
     // println!("{:?}", original);
