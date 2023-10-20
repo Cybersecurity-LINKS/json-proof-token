@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize, ser::SerializeMap};
 
 use crate::{jpt::{payloads::{Payloads, PayloadType}, claims::Claims}, encoding::{base64url_encode, base64url_encode_serializable, SerializationType, Base64UrlDecodedSerializable, self}, jwk::key::Jwk, jpa::{bbs_plus::BBSplusAlgorithm, algs::ProofAlgorithm}, errors::CustomError};
 
-use super::header::IssuerProtectedHeader;
+use super::{header::{IssuerProtectedHeader, PresentationProtectedHeader}, presented::JwpPresented};
 
 
 /// Takes the result of a rsplit and ensure we only get 3 parts (JwpIssued)
@@ -18,27 +18,14 @@ macro_rules! expect_three {
 }
 
 
-/// Takes the result of a rsplit and ensure we only get 4 parts (JwpPresented)
-/// Errors if we don't
-macro_rules! expect_four {
-    ($iter:expr) => {{
-        let mut i = $iter;
-        match (i.next(), i.next(), i.next(), i.next()) {
-            (Some(first), Some(second), Some(third), Some(fourth)) => (first, second, third, fourth),
-            _ => return Err(new_error(ErrorKind::InvalidToken)),
-        }
-    }};
-}
-
-
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct JwpIssuedForm {
+pub struct JwpIssued {
     issuer_protected_header: IssuerProtectedHeader,
     payloads: Payloads,
     proof: Option<Vec<u8>>
 }
 
-impl JwpIssuedForm {
+impl JwpIssued {
 
     pub fn new(issuer_protected_header: IssuerProtectedHeader, payloads: Payloads) -> Self{
         Self { issuer_protected_header, payloads, proof: None }
@@ -149,5 +136,9 @@ impl JwpIssuedForm {
 
     pub fn get_proof(&self) -> &Option<Vec<u8>> {
         &self.proof
+    }
+
+    pub fn present(&self, presentation_header: PresentationProtectedHeader) -> JwpPresented {
+        JwpPresented::new(self.issuer_protected_header.clone(), presentation_header, self.payloads.clone())
     }
 }

@@ -14,6 +14,7 @@ data-encoding = "2.4.0"
 indexmap = {version = "2.0.2", features = ["serde"]}
 thiserror = "1.0.30"
 zkryptium = {version = "0.1.0", path = "../../ZKryptium"}
+cargo-license = "0.5.1"
 
 [lib]
 name = "jsonprooftoken"

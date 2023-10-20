@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use jsonprooftoken::{jpt::claims::JptClaims, jwp::{header::IssuerProtectedHeader, issued::JwpIssuedForm}, jpa::algs::ProofAlgorithm, encoding::{base64url_encode, SerializationType}, jwk::{key::Jwk, types::KeyPairSubtype, alg_parameters::JwkAlgorithmParameters}};
+use jsonprooftoken::{jpt::claims::JptClaims, jwp::{header::IssuerProtectedHeader, issued::JwpIssued}, jpa::algs::ProofAlgorithm, encoding::{base64url_encode, SerializationType}, jwk::{key::Jwk, types::KeyPairSubtype, alg_parameters::JwkAlgorithmParameters}};
 use serde::Serialize;
 use serde_json::Value;
 
@@ -63,7 +63,7 @@ fn main() {
 
     println!("Issued Header: {:?}", issued_header);
 
-    let issued_jwp = JwpIssuedForm::new(issued_header,payloads);
+    let issued_jwp = JwpIssued::new(issued_header, payloads);
     println!("ISSUED JWP: \n{:?}", issued_jwp);
 
 
@@ -73,7 +73,7 @@ fn main() {
     let compact_jwp = issued_jwp.encode(SerializationType::COMPACT, &bbs_jwk).unwrap();
     println!("Compact JWP: {}", compact_jwp);
 
-    let decoded_jwp = JwpIssuedForm::decode(compact_jwp, SerializationType::COMPACT, &bbs_jwk.to_public().unwrap()).unwrap();
+    let decoded_jwp = JwpIssued::decode(compact_jwp, SerializationType::COMPACT, &bbs_jwk.to_public().unwrap()).unwrap();
 
     println!("DECODED ISSUED JWP \n{:?}", decoded_jwp);
 

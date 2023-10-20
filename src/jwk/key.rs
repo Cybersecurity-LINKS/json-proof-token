@@ -145,7 +145,7 @@ impl Jwk {
         }
 
         if let Some(value) = &self.x5u {
-            public.set_x5u(&value);
+            public.set_x5u(value);
         }
 
         if let Some(value) = &self.x5c {

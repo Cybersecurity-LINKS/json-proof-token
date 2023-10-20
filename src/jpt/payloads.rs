@@ -5,7 +5,7 @@ use crate::encoding::base64url_encode_serializable;
 
 ///TODO: Not clear what to do with this information 
 /// (https://datatracker.ietf.org/doc/html/draft-ietf-jose-json-proof-token#name-payloads)
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum PayloadType{
     Disclosed,
     Undisclosed,
@@ -19,5 +19,17 @@ pub struct Payloads (pub Vec<(String, PayloadType)>);
 impl Payloads {
     pub fn new_from_values(values: Vec<Value>) -> Self {
         Self(values.iter().map(|v| (base64url_encode_serializable(v), PayloadType::Disclosed)).collect())
+    }
+
+    pub fn get_undisclosed_indexes() -> Vec<usize> {
+        todo!()
+    }
+
+    pub fn get_disclosed_indexes() -> Vec<usize> {
+        todo!()
+    }
+
+    pub fn set_undisclosed(index: usize) {
+        todo!()
     }
 }
