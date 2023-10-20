@@ -19,5 +19,3 @@ pub enum EllipticCurveTypes {
     Bls12_381
 
 }
-
-//TODO:"crv" (Curve for BBS) could be Bls12381

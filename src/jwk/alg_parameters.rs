@@ -5,7 +5,7 @@ use crate::{jpa::algs::ProofAlgorithm, encoding::base64url_encode};
 
 use super::{types::KeyType, curves::EllipticCurveTypes, key::Jwk};
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 pub enum Algorithm {
     Proof(ProofAlgorithm),
 
@@ -24,6 +24,27 @@ pub enum JwkAlgorithmParameters {
     // RSA(JwkRSAKeyParameters),
     // OctetKey(JwkOctetKeyParameters),
     OctetKeyPair(JwkOctetKeyPairParameters),
+}
+
+impl JwkAlgorithmParameters {
+    pub fn to_public(&self) -> Option<Self> {
+        match self {
+          Self::OctetKeyPair(inner) => Some(Self::OctetKeyPair(inner.to_public())),
+        }
+    }
+    
+
+    pub fn is_public(&self) -> bool {
+        match self {
+            Self::OctetKeyPair(value) => value.is_public(),
+        }
+    }
+
+    pub fn is_private(&self) -> bool {
+        match self {
+            Self::OctetKeyPair(value) => value.is_private(),
+        }
+    }
 }
 
 

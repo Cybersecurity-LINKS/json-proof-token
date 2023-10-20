@@ -69,16 +69,11 @@ fn main() {
 
     let bbs_jwk = Jwk::generate(KeyPairSubtype::BLS12381SHA256).unwrap();
     println!("BBS Jwk: {:?}", bbs_jwk);
-
-    let mut bbs_jwk_pk = bbs_jwk.clone();
-    bbs_jwk_pk.key_params = match &bbs_jwk.key_params {
-        JwkAlgorithmParameters::OctetKeyPair(okp) => JwkAlgorithmParameters::OctetKeyPair(okp.to_public()),
-    };
     
     let compact_jwp = issued_jwp.encode(SerializationType::COMPACT, &bbs_jwk).unwrap();
     println!("Compact JWP: {}", compact_jwp);
 
-    let decoded_jwp = JwpIssuedForm::decode(compact_jwp, SerializationType::COMPACT, &bbs_jwk_pk).unwrap();
+    let decoded_jwp = JwpIssuedForm::decode(compact_jwp, SerializationType::COMPACT, &bbs_jwk.to_public().unwrap()).unwrap();
 
     println!("DECODED ISSUED JWP \n{:?}", decoded_jwp);
 
