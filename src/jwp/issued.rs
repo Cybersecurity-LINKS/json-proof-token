@@ -46,7 +46,6 @@ impl JwpIssued {
         match serialization {
             SerializationType::COMPACT => {
                 let (encoded_issuer_protected_header, encoded_payloads, encoded_proof) = expect_three!(encoded_jwp.splitn(3, '.')); 
-                println!("{} || {} || {}", encoded_issuer_protected_header, encoded_payloads, encoded_proof);
                 let issuer_protected_header: IssuerProtectedHeader = Base64UrlDecodedSerializable::from_serializable_values(encoded_issuer_protected_header).deserialize::<IssuerProtectedHeader>();
                 let payloads = Payloads(encoded_payloads.splitn(issuer_protected_header.claims.as_ref().unwrap().0.len(), "~").map(|v| {
                     if v == "" {
@@ -83,12 +82,14 @@ impl JwpIssued {
         &self.payloads
     }
 
-    pub fn get_proof(&self) -> &Option<Vec<u8>> {
-        &self.proof
+    pub fn get_proof(&self) -> Option<&Vec<u8>> {
+        self.proof.as_ref()
     }
 
-    pub fn present(&self, presentation_header: PresentationProtectedHeader) -> JwpPresented {
-        JwpPresented::new(self.issuer_protected_header.clone(), presentation_header, self.payloads.clone(), self.proof.as_ref().unwrap().clone())
+    pub fn present(&self, serialization: SerializationType, key: &Jwk, presentation_header: PresentationProtectedHeader) -> Result<String, CustomError> {
+        let jwp = JwpPresented::new(self.issuer_protected_header.clone(), presentation_header, self.payloads.clone());
+        jwp.encode(serialization, key, self.get_proof().unwrap())
+
     }
 
     fn generate_proof(alg: ProofAlgorithm, key: &Jwk, encoded_issuer_header: &str,  payloads: &Payloads) -> Result<String, CustomError>{

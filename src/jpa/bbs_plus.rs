@@ -145,7 +145,7 @@ impl BBSplusAlgorithm {
         }
     }
 
-    pub fn verify_presentation_proof(&self) -> Option<Vec<u8>> {
+    pub fn verify_presentation_proof(alg: ProofAlgorithm, key: &Jwk, proof: &str, presentation_header: &str, issuer_header: &str, payloads: &Payloads) -> Result<(), CustomError>  {
         todo!()
     }
 }

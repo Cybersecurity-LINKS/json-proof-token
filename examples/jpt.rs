@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use jsonprooftoken::{jpt::claims::JptClaims, jwp::{header::{IssuerProtectedHeader, PresentationProtectedHeader}, issued::JwpIssued}, jpa::algs::ProofAlgorithm, encoding::{base64url_encode, SerializationType}, jwk::{key::Jwk, types::KeyPairSubtype, alg_parameters::JwkAlgorithmParameters}};
+use jsonprooftoken::{jpt::claims::JptClaims, jwp::{header::{IssuerProtectedHeader, PresentationProtectedHeader}, issued::JwpIssued, presented::JwpPresented}, jpa::algs::ProofAlgorithm, encoding::{base64url_encode, SerializationType}, jwk::{key::Jwk, types::KeyPairSubtype, alg_parameters::JwkAlgorithmParameters}};
 use serde::Serialize;
 use serde_json::Value;
 
@@ -84,8 +84,14 @@ fn main() {
         nonce: Some("wrmBRkKtXjQ".to_owned())
     };
 
-    let presentation_jwp = decoded_issued_jwp.present(presentation_header);
-    let compact_presented_jwp = presentation_jwp.encode(SerializationType::COMPACT, &bbs_jwk.to_public().unwrap()).unwrap();
+    
+    // This is an alternative
+    // let presentation_jwp = decoded_issued_jwp.present(SerializationType::COMPACT, &bbs_jwk.to_public().unwrap(), presentation_header);
+    
+    
+    let presentation_jwp = JwpPresented::new(decoded_issued_jwp.get_issuer_protected_header().clone(),presentation_header, decoded_issued_jwp.get_payloads().clone());
+    let compact_presented_jwp = presentation_jwp.encode(SerializationType::COMPACT, &bbs_jwk.to_public().unwrap(), decoded_issued_jwp.get_proof().unwrap()).unwrap();
+
     println!("Compact Presented JWP: {}", compact_presented_jwp);
 
 
