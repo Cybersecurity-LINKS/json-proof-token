@@ -15,7 +15,7 @@ pub enum EllipticCurveTypes {
     #[serde(rename = "secp256k1")]
     Secp256K1,
 
-    #[serde(rename = "BLS12-381")]
-    Bls12_381
+    #[serde(rename = "Bls12381G2")]
+    Bls12381G2
 
 }

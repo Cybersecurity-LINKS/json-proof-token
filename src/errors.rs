@@ -21,5 +21,8 @@ pub enum CustomError {
     InvalidIssuedProof,
 
     #[error("Presented Proof verification failed!")]
-    InvalidPresentedProof
+    InvalidPresentedProof,
+
+    #[error("Index out of bounds!")]
+    IndexOutOfBounds,
 }

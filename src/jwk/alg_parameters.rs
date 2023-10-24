@@ -64,11 +64,6 @@ pub struct JwkOctetKeyPairParameters {
 
 impl JwkOctetKeyPairParameters {
 
-    pub fn gen() -> Jwk {
-        let o = Self::new(EllipticCurveTypes::Bls12_381, "kpw", None);
-        Jwk { kid: None, pk_use: None, key_ops: None, alg: None, x5u: None, x5c: None, x5t: None, key_params: OctetKeyPair(o) }
-    }
-
     pub fn new<T: AsRef<[u8]>>(crv: EllipticCurveTypes, x: T, d: Option<T> ) -> Self{
 
         Self{

@@ -58,7 +58,7 @@ impl Jwk {
                 let keypair = KeyPair::<BBS_BLS12381_SHA256>::generate(None, None);
                 let pk = keypair.public_key().to_bytes();
                 let sk = keypair.private_key().to_bytes();
-                let okp_params = JwkOctetKeyPairParameters::new(super::curves::EllipticCurveTypes::Bls12_381, pk.to_vec(), Some(sk.to_vec()));
+                let okp_params = JwkOctetKeyPairParameters::new(super::curves::EllipticCurveTypes::Bls12381G2, pk.to_vec(), Some(sk.to_vec()));
                 let jwk_params = JwkAlgorithmParameters::OctetKeyPair(okp_params);
                 Ok(Self{kid: None, pk_use: None, key_ops: None, alg: None, x5u: None, x5c: None, x5t: None, key_params: jwk_params })
             },
@@ -66,7 +66,7 @@ impl Jwk {
                 let keypair = KeyPair::<BBS_BLS12381_SHAKE256>::generate(None, None);
                 let pk = keypair.public_key().to_bytes();
                 let sk = keypair.private_key().to_bytes();
-                let okp_params = JwkOctetKeyPairParameters::new(super::curves::EllipticCurveTypes::Bls12_381, pk.to_vec(), Some(sk.to_vec()));
+                let okp_params = JwkOctetKeyPairParameters::new(super::curves::EllipticCurveTypes::Bls12381G2, pk.to_vec(), Some(sk.to_vec()));
                 let jwk_params = JwkAlgorithmParameters::OctetKeyPair(okp_params);
                 Ok(Self{kid: None, pk_use: None, key_ops: None, alg: None, x5u: None, x5c: None, x5t: None, key_params: jwk_params })
             },
@@ -207,8 +207,8 @@ pub enum PKUse {
     #[serde(rename = "sig")]
     Signature,
     #[serde(rename = "enc")]
-    Encryption
-
-    //TODO: maybe add Proof
+    Encryption,
+    #[serde(rename = "proof")]
+    Proof
 }
 

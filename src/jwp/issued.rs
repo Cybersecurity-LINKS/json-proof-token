@@ -100,6 +100,8 @@ impl JwpIssued {
             ProofAlgorithm::MAC_K25519 => todo!(),
             ProofAlgorithm::MAC_K448 => todo!(),
             ProofAlgorithm::MAC_H256K => todo!(),
+            ProofAlgorithm::BLS12381_SHA256_PROOF => panic!("This is valid only in presented JWPs"),
+            ProofAlgorithm::BLS12381_SHAKE256_PROOF => todo!("This is valid only in presented JWPs"),
         };
 
         Ok(proof)
@@ -117,6 +119,8 @@ impl JwpIssued {
             ProofAlgorithm::MAC_K25519 => todo!(),
             ProofAlgorithm::MAC_K448 => todo!(),
             ProofAlgorithm::MAC_H256K => todo!(),
+            ProofAlgorithm::BLS12381_SHA256_PROOF => panic!("This is valid only in presented JWPs"),
+            ProofAlgorithm::BLS12381_SHAKE256_PROOF => panic!("This is valid only in presented JWPs"),
         };
 
         check
