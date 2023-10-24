@@ -22,6 +22,7 @@ pub struct IssuerProtectedHeader {
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct PresentationProtectedHeader {
+    pub alg: ProofAlgorithm,
     /// Who have to receive the JPT.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub aud: Option<String>,
