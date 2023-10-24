@@ -13,7 +13,7 @@ flatten-json-object = "0.6.1"
 data-encoding = "2.4.0"
 indexmap = {version = "2.0.2", features = ["serde"]}
 thiserror = "1.0.30"
-zkryptium = {version = "0.1.1", default_feature = false, features = ["bbsplus"]}
+zkryptium = {version = "0.1.1", default-features = false, features = ["bbsplus"]}
 cargo-license = "0.5.1"
 
 [lib]
