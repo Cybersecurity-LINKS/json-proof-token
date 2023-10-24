@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use zkryptium::{keys::bbsplus_key::{BBSplusPublicKey, BBSplusSecretKey}, signatures::{signature::{Signature, BBSplusSignature}, proof::PoKSignature}, utils::message::BBSplusMessage, schemes::algorithms::{BBS_BLS12381_SHA256, Scheme, BBS_BLS12381_SHAKE256, BBSplus}};
+use zkryptium::{keys::bbsplus_key::{BBSplusPublicKey, BBSplusSecretKey}, signatures::{signature::{Signature, BBSplusSignature}, proof::{PoKSignature, BBSplusPoKSignature}}, utils::message::BBSplusMessage, schemes::algorithms::{BBS_BLS12381_SHA256, Scheme, BBS_BLS12381_SHAKE256, BBSplus}};
 
 use crate::{jwk::{key::Jwk, utils::{check_alg_curve_compatibility}, alg_parameters::{Algorithm, JwkAlgorithmParameters}}, jwp::header::IssuerProtectedHeader, errors::CustomError, encoding::base64url_decode, jpt::payloads::Payloads};
 
@@ -65,12 +65,8 @@ impl BBSplusAlgorithm {
         if check_alg_curve_compatibility(Algorithm::Proof(alg.clone()), key_params.crv.clone()) == false {
             Err(CustomError::ProofGenerationError("key is not compatible".to_string()))
         } else {
-            println!("x: {}", key_params.x);
             let dec_pk = base64url_decode(&key_params.x);
-            println!("DEC PK: {:?}", dec_pk);
             let pk = BBSplusPublicKey::from_bytes(&dec_pk);
-            // let sk = BBSplusSecretKey::from_bytes(&base64url_decode(key_params.d.as_ref().unwrap()));
-
         
             let proof = BBSplusSignature::from_bytes(base64url_decode(proof).as_slice().try_into().unwrap()).unwrap();
             let check = match alg {
@@ -146,7 +142,52 @@ impl BBSplusAlgorithm {
     }
 
     pub fn verify_presentation_proof(alg: ProofAlgorithm, key: &Jwk, proof: &str, presentation_header: &str, issuer_header: &str, payloads: &Payloads) -> Result<(), CustomError>  {
-        todo!()
+        let key_params = match &key.key_params {
+            JwkAlgorithmParameters::OctetKeyPair(params) => {
+                if params.is_public() == false {
+                    return Err(CustomError::ProofGenerationError("key is not compatible".to_string()))
+                }
+                params
+            },
+            _ => return Err(CustomError::ProofGenerationError("key is not compatible".to_string()))
+        };
+        
+        if check_alg_curve_compatibility(Algorithm::Proof(alg.clone()), key_params.crv.clone()) == false {
+            Err(CustomError::ProofGenerationError("key is not compatible".to_string()))
+        } else {
+            let dec_pk = base64url_decode(&key_params.x);
+            let pk = BBSplusPublicKey::from_bytes(&dec_pk);
+            let disclosed_indexes = payloads.get_disclosed_indexes();
+            let proof = BBSplusPoKSignature::from_bytes(base64url_decode(proof).as_slice().try_into().unwrap());
+            let check = match alg {
+                ProofAlgorithm::BLS12381_SHA256_PROOF => {
+                    let messages: Vec<BBSplusMessage> = payloads.get_disclosed_payloads()
+                    .iter()
+                    .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHA256 as Scheme>::Ciphersuite>(p.as_bytes(), None))
+                    .collect();
+                    let proof = PoKSignature::<BBS_BLS12381_SHA256>::BBSplus(proof);
+                    proof.proof_verify(&pk, Some(&messages), None, Some(&disclosed_indexes), Some(issuer_header.as_bytes()), Some(presentation_header.as_bytes()))
+                    
+                },
+                ProofAlgorithm::BLS12381_SHAKE256_PROOF => {
+                    let messages: Vec<BBSplusMessage> = payloads.get_disclosed_payloads()
+                    .iter()
+                    .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHAKE256 as Scheme>::Ciphersuite>(p.as_bytes(), None))
+                    .collect();
+
+                    let proof = PoKSignature::<BBS_BLS12381_SHAKE256>::BBSplus(proof);
+                    proof.proof_verify(&pk, Some(&messages), None, Some(&disclosed_indexes), Some(issuer_header.as_bytes()), Some(presentation_header.as_bytes()))
+                    
+                },
+                _ => unreachable!()
+            };
+
+            match check {
+                true => Ok(()),
+                false => Err(CustomError::InvalidIssuedProof)
+                
+            }
+        }
     }
 }
 

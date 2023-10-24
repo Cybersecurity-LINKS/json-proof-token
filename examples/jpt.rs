@@ -94,6 +94,10 @@ fn main() {
 
     println!("Compact Presented JWP: {}", compact_presented_jwp);
 
+    let decoded_presentation_jwp = JwpPresented::decode(compact_presented_jwp, SerializationType::COMPACT, &bbs_jwk.to_public().unwrap()).unwrap();
+    println!("DECODED PRESENTED JWP \n{:?}", decoded_presentation_jwp);
+
+
 
     
 

@@ -47,6 +47,8 @@ impl JwpIssued {
             SerializationType::COMPACT => {
                 let (encoded_issuer_protected_header, encoded_payloads, encoded_proof) = expect_three!(encoded_jwp.splitn(3, '.')); 
                 let issuer_protected_header: IssuerProtectedHeader = Base64UrlDecodedSerializable::from_serializable_values(encoded_issuer_protected_header).deserialize::<IssuerProtectedHeader>();
+                
+                //TODO: this could not have much sense for now (maybe useful to handle blind signatures?)
                 let payloads = Payloads(encoded_payloads.splitn(issuer_protected_header.claims.as_ref().unwrap().0.len(), "~").map(|v| {
                     if v == "" {
                         ("".to_string(), PayloadType::Undisclosed)

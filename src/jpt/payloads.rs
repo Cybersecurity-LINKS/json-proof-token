@@ -49,6 +49,33 @@ impl Payloads {
     }
 
 
+    pub fn get_undisclosed_payloads(&self) -> Vec<String> {
+        let undisclosed_indexes = self.get_undisclosed_indexes();
+
+        let undisclosed_payloads: Vec<String> = self.0
+            .iter()
+            .enumerate()
+            .filter(|(index, _)| undisclosed_indexes.contains(index))
+            .map(|(_, payload)| payload.0.clone())
+            .collect();
+
+        undisclosed_payloads
+    }
+
+    pub fn get_disclosed_payloads(&self) -> Vec<String> {
+        let disclosed_indexes = self.get_disclosed_indexes();
+
+        let disclosed_payloads: Vec<String> = self.0
+            .iter()
+            .enumerate()
+            .filter(|(index, _)| disclosed_indexes.contains(index))
+            .map(|(_, payload)| payload.0.clone())
+            .collect();
+
+        disclosed_payloads
+    }
+
+
     pub fn set_disclosed(&mut self, index: usize, disclosed: bool) -> Result<(), CustomError>{
         if let Some(p) = self.0.get_mut(index) {
             // Get the reference to the tuple at the specified index

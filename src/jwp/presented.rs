@@ -48,7 +48,7 @@ impl JwpPresented {
         match serialization {
             SerializationType::COMPACT => {
                 let (encoded_presentation_protected_header, encoded_issuer_protected_header, encoded_payloads, encoded_proof) = expect_four!(encoded_jwp.splitn(4, '.'));
-                let presentation_protected_header: PresentationProtectedHeader = Base64UrlDecodedSerializable::from_serializable_values(encoded_issuer_protected_header).deserialize::<PresentationProtectedHeader>();
+                let presentation_protected_header: PresentationProtectedHeader = Base64UrlDecodedSerializable::from_serializable_values(encoded_presentation_protected_header).deserialize::<PresentationProtectedHeader>();
                 let issuer_protected_header: IssuerProtectedHeader = Base64UrlDecodedSerializable::from_serializable_values(encoded_issuer_protected_header).deserialize::<IssuerProtectedHeader>();
                 let payloads = Payloads(encoded_payloads.splitn(issuer_protected_header.claims.as_ref().unwrap().0.len(), "~").map(|v| {
                     if v == "" {
@@ -60,7 +60,7 @@ impl JwpPresented {
 
                 match Self::verify_proof(presentation_protected_header.alg, key, encoded_proof, encoded_presentation_protected_header, encoded_issuer_protected_header, &payloads) {
                     Ok(_) => {
-                        println!("Issued Proof Valid!!!!");
+                        println!("Presented Proof Valid!!!!");
                         Ok(Self{issuer_protected_header, payloads, proof: Some(base64url_decode(encoded_proof)), presentation_protected_header})
                     },
                     Err(e) => Err(e),
