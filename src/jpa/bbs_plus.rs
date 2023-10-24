@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use zkryptium::{keys::bbsplus_key::{BBSplusPublicKey, BBSplusSecretKey}, signatures::{signature::{Signature, BBSplusSignature}, proof::{PoKSignature, BBSplusPoKSignature}}, utils::message::BBSplusMessage, schemes::algorithms::{BBS_BLS12381_SHA256, Scheme, BBS_BLS12381_SHAKE256, BBSplus}};
+use zkryptium::{bbsplus::{keys::{BBSplusPublicKey, BBSplusSecretKey}, signature::BBSplusSignature, proof::BBSplusPoKSignature}, utils::message::BBSplusMessage, schemes::{generics::{Signature, PoKSignature}, algorithms::{BBS_BLS12381_SHA256, BBS_BLS12381_SHAKE256, Scheme}}};
 
 use crate::{jwk::{key::Jwk, utils::{check_alg_curve_compatibility}, alg_parameters::{Algorithm, JwkAlgorithmParameters}}, jwp::header::IssuerProtectedHeader, errors::CustomError, encoding::base64url_decode, jpt::payloads::Payloads};
 
@@ -192,18 +192,6 @@ impl BBSplusAlgorithm {
 }
 
 
-
-// impl ProofGenerator for BBSplusAlgorithmParameters {
-//     fn generate_issuer_proof(&self) -> Option<Vec<u8>> {
-//         let a = self.test + 1;
-//         println!("a: {}", a);
-//         None 
-//     }
-
-//     fn generate_presentaiton_proof(&self) -> Option<Vec<u8>> {
-//         todo!()
-//     }
-// }
 
 
 

@@ -1,7 +1,7 @@
 use std::error::Error;
 use crate::{jwk::alg_parameters::JwkOctetKeyPairParameters, encoding::{base64url_encode, base64url_decode}, errors::CustomError};
 use serde::{Deserialize, Serialize};
-use zkryptium::{keys::{pair::KeyPair, bbsplus_key::BBSplusPublicKey}, schemes::algorithms::{BBS_BLS12381_SHA256, BBS_BLS12381_SHAKE256}};
+use zkryptium::{schemes::algorithms::{BBS_BLS12381_SHA256, BBS_BLS12381_SHAKE256}, keys::pair::KeyPair};
 
 
 use super::{alg_parameters::{JwkAlgorithmParameters, Algorithm}, utils::check_alg_curve_compatibility, types::KeyPairSubtype};
