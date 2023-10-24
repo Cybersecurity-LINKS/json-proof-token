@@ -89,7 +89,10 @@ fn main() {
     // let presentation_jwp = decoded_issued_jwp.present(SerializationType::COMPACT, &bbs_jwk.to_public().unwrap(), presentation_header);
     
     
-    let presentation_jwp = JwpPresented::new(decoded_issued_jwp.get_issuer_protected_header().clone(),presentation_header, decoded_issued_jwp.get_payloads().clone());
+    let mut presentation_jwp = JwpPresented::new(decoded_issued_jwp.get_issuer_protected_header().clone(),presentation_header, decoded_issued_jwp.get_payloads().clone());
+    presentation_jwp.set_disclosed(1, false).unwrap();
+    presentation_jwp.set_disclosed(3, false).unwrap();
+
     let compact_presented_jwp = presentation_jwp.encode(SerializationType::COMPACT, &bbs_jwk.to_public().unwrap(), decoded_issued_jwp.get_proof().unwrap()).unwrap();
 
     println!("Compact Presented JWP: {}", compact_presented_jwp);
