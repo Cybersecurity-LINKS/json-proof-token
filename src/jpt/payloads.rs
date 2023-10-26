@@ -14,14 +14,15 @@ pub enum PayloadType{
 
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct Payloads (pub Vec<(String, PayloadType)>);
+pub struct Payloads (pub Vec<(Value, PayloadType)>);
 
 impl Payloads {
     pub fn new_from_values(values: Vec<Value>) -> Self {
-        // TODO: change this, should not be base64url encoded here, 
-        // because the proof is computed over this but should be 
-        // computed over octet strings 
-        Self(values.iter().map(|v| (base64url_encode_serializable(v), PayloadType::Disclosed)).collect())
+        let mut payloads = Vec::new();
+        for value in values {
+            payloads.push((value, PayloadType::Disclosed));
+        }
+        Payloads(payloads)
     }
 
     pub fn get_undisclosed_indexes(&self) -> Vec<usize> {
@@ -49,10 +50,10 @@ impl Payloads {
     }
 
 
-    pub fn get_undisclosed_payloads(&self) -> Vec<String> {
+    pub fn get_undisclosed_payloads(&self) -> Vec<Value> {
         let undisclosed_indexes = self.get_undisclosed_indexes();
 
-        let undisclosed_payloads: Vec<String> = self.0
+        let undisclosed_payloads: Vec<Value> = self.0
             .iter()
             .enumerate()
             .filter(|(index, _)| undisclosed_indexes.contains(index))
@@ -62,10 +63,10 @@ impl Payloads {
         undisclosed_payloads
     }
 
-    pub fn get_disclosed_payloads(&self) -> Vec<String> {
+    pub fn get_disclosed_payloads(&self) -> Vec<Value> {
         let disclosed_indexes = self.get_disclosed_indexes();
 
-        let disclosed_payloads: Vec<String> = self.0
+        let disclosed_payloads: Vec<Value> = self.0
             .iter()
             .enumerate()
             .filter(|(index, _)| disclosed_indexes.contains(index))

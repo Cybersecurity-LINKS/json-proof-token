@@ -25,8 +25,9 @@ fn main() {
     //         "name": "John Doe"
     //     })),
     // };
-
+    
    
+
     let custom_claims = serde_json::json!({
         "family_name": "Doe",
         "given_name": "Jay",
@@ -42,8 +43,6 @@ fn main() {
     // jpt_claims.add_claim("email", "jaydoe@example.org");
     // jpt_claims.add_claim("age", 42);
     jpt_claims.add_claim("", custom_claims, true);
-
-
 
     
     println!("{:?}", jpt_claims);

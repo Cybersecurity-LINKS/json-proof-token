@@ -10,7 +10,7 @@ use super::algs::ProofAlgorithm;
 pub struct BBSplusAlgorithm{}
 
 impl BBSplusAlgorithm {
-    pub fn generate_issuer_proof(alg: ProofAlgorithm, payloads: &Payloads, key: &Jwk, issuer_header: &str) -> Result<Vec<u8>, CustomError> {
+    pub fn generate_issuer_proof(alg: ProofAlgorithm, payloads: &Payloads, key: &Jwk, issuer_header: &[u8]) -> Result<Vec<u8>, CustomError> {
         let key_params = match &key.key_params {
             JwkAlgorithmParameters::OctetKeyPair(params) => {
                 if params.is_private() == false {
@@ -32,17 +32,17 @@ impl BBSplusAlgorithm {
                 ProofAlgorithm::BLS12381_SHA256 => {
                     let messages: Vec<BBSplusMessage> = payloads.0
                     .iter()
-                    .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHA256 as Scheme>::Ciphersuite>(p.0.as_bytes(), None))
+                    .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHA256 as Scheme>::Ciphersuite>(&serde_json::to_vec(&p.0).unwrap(), None))
                     .collect();
-                    Signature::<BBS_BLS12381_SHA256>::sign(Some(&messages), &sk, &pk, None, Some(issuer_header.as_bytes())).to_bytes()
+                    Signature::<BBS_BLS12381_SHA256>::sign(Some(&messages), &sk, &pk, None, Some(issuer_header)).to_bytes()
             
                 },
                 ProofAlgorithm::BLS12381_SHAKE256 => {
                     let messages: Vec<BBSplusMessage> = payloads.0
                     .iter()
-                    .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHAKE256 as Scheme>::Ciphersuite>(p.0.as_bytes(), None))
+                    .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHAKE256 as Scheme>::Ciphersuite>(&serde_json::to_vec(&p.0).unwrap(), None))
                     .collect();
-                    Signature::<BBS_BLS12381_SHAKE256>::sign(Some(&messages), &sk, &pk, None, Some(issuer_header.as_bytes())).to_bytes()
+                    Signature::<BBS_BLS12381_SHAKE256>::sign(Some(&messages), &sk, &pk, None, Some(issuer_header)).to_bytes()
                 },
                 _ => unreachable!()
             };
@@ -51,7 +51,7 @@ impl BBSplusAlgorithm {
         }
     }
 
-    pub fn verify_issuer_proof(alg: ProofAlgorithm, key: &Jwk, proof: &str, issuer_header: &str, payloads: &Payloads) -> Result<(), CustomError> {
+    pub fn verify_issuer_proof(alg: ProofAlgorithm, key: &Jwk, proof: &[u8], issuer_header: &[u8], payloads: &Payloads) -> Result<(), CustomError> {
         let key_params = match &key.key_params {
             JwkAlgorithmParameters::OctetKeyPair(params) => {
                 if params.is_public() == false {
@@ -68,25 +68,25 @@ impl BBSplusAlgorithm {
             let dec_pk = base64url_decode(&key_params.x);
             let pk = BBSplusPublicKey::from_bytes(&dec_pk);
         
-            let proof = BBSplusSignature::from_bytes(base64url_decode(proof).as_slice().try_into().unwrap()).unwrap();
+            let proof = BBSplusSignature::from_bytes(proof.try_into().unwrap()).unwrap();
             let check = match alg {
                 ProofAlgorithm::BLS12381_SHA256 => {
                     let messages: Vec<BBSplusMessage> = payloads.0
                     .iter()
-                    .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHA256 as Scheme>::Ciphersuite>(p.0.as_bytes(), None))
+                    .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHA256 as Scheme>::Ciphersuite>(&serde_json::to_vec(&p.0).unwrap(), None))
                     .collect();
                     let proof = Signature::<BBS_BLS12381_SHA256>::BBSplus(proof);
-                    proof.verify(&pk, Some(&messages), None, Some(issuer_header.as_bytes()))
+                    proof.verify(&pk, Some(&messages), None, Some(issuer_header))
                     
                 },
                 ProofAlgorithm::BLS12381_SHAKE256 => {
                     let messages: Vec<BBSplusMessage> = payloads.0
                     .iter()
-                    .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHAKE256 as Scheme>::Ciphersuite>(p.0.as_bytes(), None))
+                    .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHAKE256 as Scheme>::Ciphersuite>(&serde_json::to_vec(&p.0).unwrap(), None))
                     .collect();
 
                     let proof = Signature::<BBS_BLS12381_SHAKE256>::BBSplus(proof);
-                    proof.verify(&pk, Some(&messages), None, Some(issuer_header.as_bytes()))  
+                    proof.verify(&pk, Some(&messages), None, Some(issuer_header))  
                 },
                 _ => unreachable!()
             };
@@ -99,7 +99,7 @@ impl BBSplusAlgorithm {
         }
     }
 
-    pub fn generate_presentation_proof(alg: ProofAlgorithm, signature: &[u8], payloads: &Payloads, key: &Jwk, issuer_header: &str, presentation_header: &str) ->  Result<Vec<u8>, CustomError> {
+    pub fn generate_presentation_proof(alg: ProofAlgorithm, signature: &[u8], payloads: &Payloads, key: &Jwk, issuer_header: &[u8], presentation_header: &[u8]) ->  Result<Vec<u8>, CustomError> {
         let key_params = match &key.key_params {
             JwkAlgorithmParameters::OctetKeyPair(params) => {
                 if params.is_public() == false {
@@ -122,17 +122,17 @@ impl BBSplusAlgorithm {
                 ProofAlgorithm::BLS12381_SHA256_PROOF => {
                     let messages: Vec<BBSplusMessage> = payloads.0
                     .iter()
-                    .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHA256 as Scheme>::Ciphersuite>(p.0.as_bytes(), None))
+                    .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHA256 as Scheme>::Ciphersuite>(&serde_json::to_vec(&p.0).unwrap(), None))
                     .collect();
-                    PoKSignature::<BBS_BLS12381_SHA256>::proof_gen(&signature, &pk, Some(&messages), None, Some(&revealed_message_indexes), Some(issuer_header.as_bytes()), Some(presentation_header.as_bytes()), None).to_bytes()
+                    PoKSignature::<BBS_BLS12381_SHA256>::proof_gen(&signature, &pk, Some(&messages), None, Some(&revealed_message_indexes), Some(issuer_header), Some(presentation_header), None).to_bytes()
             
                 },
                 ProofAlgorithm::BLS12381_SHAKE256_PROOF => {
                     let messages: Vec<BBSplusMessage> = payloads.0
                     .iter()
-                    .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHAKE256 as Scheme>::Ciphersuite>(p.0.as_bytes(), None))
+                    .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHAKE256 as Scheme>::Ciphersuite>(&serde_json::to_vec(&p.0).unwrap(), None))
                     .collect();
-                    PoKSignature::<BBS_BLS12381_SHAKE256>::proof_gen(&signature, &pk, Some(&messages), None, Some(&revealed_message_indexes), Some(issuer_header.as_bytes()), Some(presentation_header.as_bytes()), None).to_bytes()
+                    PoKSignature::<BBS_BLS12381_SHAKE256>::proof_gen(&signature, &pk, Some(&messages), None, Some(&revealed_message_indexes), Some(issuer_header), Some(presentation_header), None).to_bytes()
                 },
                 _ => unreachable!()
             };
@@ -141,7 +141,7 @@ impl BBSplusAlgorithm {
         }
     }
 
-    pub fn verify_presentation_proof(alg: ProofAlgorithm, key: &Jwk, proof: &str, presentation_header: &str, issuer_header: &str, payloads: &Payloads) -> Result<(), CustomError>  {
+    pub fn verify_presentation_proof(alg: ProofAlgorithm, key: &Jwk, proof: &[u8], presentation_header: &[u8], issuer_header: &[u8], payloads: &Payloads) -> Result<(), CustomError>  {
         let key_params = match &key.key_params {
             JwkAlgorithmParameters::OctetKeyPair(params) => {
                 if params.is_public() == false {
@@ -158,25 +158,25 @@ impl BBSplusAlgorithm {
             let dec_pk = base64url_decode(&key_params.x);
             let pk = BBSplusPublicKey::from_bytes(&dec_pk);
             let disclosed_indexes = payloads.get_disclosed_indexes();
-            let proof = BBSplusPoKSignature::from_bytes(base64url_decode(proof).as_slice().try_into().unwrap());
+            let proof = BBSplusPoKSignature::from_bytes(proof.try_into().unwrap());
             let check = match alg {
                 ProofAlgorithm::BLS12381_SHA256_PROOF => {
                     let messages: Vec<BBSplusMessage> = payloads.get_disclosed_payloads()
                     .iter()
-                    .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHA256 as Scheme>::Ciphersuite>(p.as_bytes(), None))
+                    .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHA256 as Scheme>::Ciphersuite>(&serde_json::to_vec(p).unwrap(), None))
                     .collect();
                     let proof = PoKSignature::<BBS_BLS12381_SHA256>::BBSplus(proof);
-                    proof.proof_verify(&pk, Some(&messages), None, Some(&disclosed_indexes), Some(issuer_header.as_bytes()), Some(presentation_header.as_bytes()))
+                    proof.proof_verify(&pk, Some(&messages), None, Some(&disclosed_indexes), Some(issuer_header), Some(presentation_header))
                     
                 },
                 ProofAlgorithm::BLS12381_SHAKE256_PROOF => {
                     let messages: Vec<BBSplusMessage> = payloads.get_disclosed_payloads()
                     .iter()
-                    .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHAKE256 as Scheme>::Ciphersuite>(p.as_bytes(), None))
+                    .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHAKE256 as Scheme>::Ciphersuite>(&serde_json::to_vec(p).unwrap(), None))
                     .collect();
 
                     let proof = PoKSignature::<BBS_BLS12381_SHAKE256>::BBSplus(proof);
-                    proof.proof_verify(&pk, Some(&messages), None, Some(&disclosed_indexes), Some(issuer_header.as_bytes()), Some(presentation_header.as_bytes()))
+                    proof.proof_verify(&pk, Some(&messages), None, Some(&disclosed_indexes), Some(issuer_header), Some(presentation_header))
                     
                 },
                 _ => unreachable!()
@@ -184,7 +184,7 @@ impl BBSplusAlgorithm {
 
             match check {
                 true => Ok(()),
-                false => Err(CustomError::InvalidIssuedProof)
+                false => Err(CustomError::InvalidPresentedProof)
                 
             }
         }
