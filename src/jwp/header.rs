@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{jpt::claims::{JptClaims, Claims}, jpa::algs::ProofAlgorithm};
 
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct IssuerProtectedHeader {
     /// JWP type (JPT)
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -18,7 +18,10 @@ pub struct IssuerProtectedHeader {
     /// if you want you can put the claims directly into the header
     #[serde(skip_serializing_if = "Option::is_none")]
     pub claims: Option<Claims>
+
+    
 }
+
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct PresentationProtectedHeader {

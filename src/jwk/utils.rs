@@ -1,4 +1,4 @@
-use crate::jpa::algs::ProofAlgorithm;
+use crate::jpa::algs::{ProofAlgorithm};
 
 use super::alg_parameters::Algorithm;
 use super::curves::EllipticCurveTypes;

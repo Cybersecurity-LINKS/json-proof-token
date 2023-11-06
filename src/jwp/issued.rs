@@ -1,6 +1,8 @@
+use std::marker::PhantomData;
+
 use serde::{Deserialize, Serialize, ser::SerializeMap};
 
-use crate::{jpt::{payloads::{Payloads, PayloadType}, claims::Claims}, encoding::{base64url_encode, base64url_encode_serializable, SerializationType, Base64UrlDecodedSerializable, self, base64url_decode}, jwk::key::Jwk, jpa::{bbs_plus::BBSplusAlgorithm, algs::ProofAlgorithm}, errors::CustomError};
+use crate::{jpt::{payloads::{Payloads, PayloadType}, claims::Claims}, encoding::{base64url_encode, base64url_encode_serializable, SerializationType, Base64UrlDecodedSerializable, self, base64url_decode}, jwk::key::Jwk, jpa::{algs::{ProofAlgorithm, AlgorithmsImplementation}, bbs_plus::{BBSAlgorithm, ZkryptiumImplementation}, su::{SUAlgorithm, SUImplementation}, mac::{MACAlgorithm, MACImplementation}}, errors::CustomError};
 
 use super::{header::{IssuerProtectedHeader, PresentationProtectedHeader}, presented::JwpPresented};
 
@@ -18,33 +20,37 @@ macro_rules! expect_three {
 }
 
 
+//TODO: maybe make a trait for encode and decode and put generics there
+
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct JwpIssued {
+pub struct JwpIssued{
     issuer_protected_header: IssuerProtectedHeader,
     payloads: Payloads,
-    proof: Option<Vec<u8>>
+    proof: Option<Vec<u8>>,
 }
 
-impl JwpIssued {
+
+
+impl JwpIssued{
 
     pub fn new(issuer_protected_header: IssuerProtectedHeader, payloads: Payloads) -> Self{
-        Self { issuer_protected_header, payloads, proof: None }
+        Self{ issuer_protected_header, payloads, proof: None, }
     }
 
     
-    pub fn encode(&self, serialization: SerializationType, key: &Jwk) -> Result<String, CustomError> {
+    pub fn encode(&self, serialization: SerializationType, key: &Jwk, implementation: &AlgorithmsImplementation) -> Result<String, CustomError> {
         // let encoded_issuer_header = base64url_encode_serializable(&self.issuer_protected_header);
 
         let issuer_header_oct = serde_json::to_vec(&self.issuer_protected_header).unwrap();
 
-        let proof = Self::generate_proof(self.issuer_protected_header.alg, key, &issuer_header_oct, &self.payloads)?;
+        let proof = Self::generate_proof(implementation, self.issuer_protected_header.alg, key, &issuer_header_oct, &self.payloads)?;
 
         let jwp = Self::serialize(serialization, &issuer_header_oct, &self.payloads, &proof);
         
         Ok(jwp)
     }
 
-    pub fn decode(encoded_jwp: String, serialization: SerializationType, key: &Jwk) -> Result<Self, CustomError>{
+    pub fn decode(encoded_jwp: String, serialization: SerializationType, key: &Jwk, implementation: &AlgorithmsImplementation) -> Result<Self, CustomError>{
         match serialization {
             SerializationType::COMPACT => {
                 let (encoded_issuer_protected_header, encoded_payloads, encoded_proof) = expect_three!(encoded_jwp.splitn(3, '.')); 
@@ -63,10 +69,10 @@ impl JwpIssued {
                 let proof = base64url_decode(encoded_proof);
                 let issuer_header_oct = serde_json::to_vec(&issuer_protected_header).unwrap();
 
-                match Self::verify_proof(issuer_protected_header.alg, key, &proof, &issuer_header_oct, &payloads) {
+                match Self::verify_proof(implementation, issuer_protected_header.alg, key, &proof, &issuer_header_oct, &payloads) {
                     Ok(_) => {
                         println!("Issued Proof Valid!!!!");
-                        Ok(Self{issuer_protected_header, payloads, proof: Some(proof)})
+                        Ok(Self{issuer_protected_header, payloads, proof: Some(proof),})
                     },
                     Err(e) => Err(e),
                 }            
@@ -94,16 +100,16 @@ impl JwpIssued {
         self.proof.as_ref()
     }
 
-    pub fn present(&self, serialization: SerializationType, key: &Jwk, presentation_header: PresentationProtectedHeader) -> Result<String, CustomError> {
+    pub fn present(&self, serialization: SerializationType, key: &Jwk, presentation_header: PresentationProtectedHeader, implementation: &AlgorithmsImplementation) -> Result<String, CustomError> {
         let jwp = JwpPresented::new(self.issuer_protected_header.clone(), presentation_header, self.payloads.clone());
-        jwp.encode(serialization, key, self.get_proof().unwrap())
+        jwp.encode(serialization, key, self.get_proof().unwrap(), implementation)
 
     }
 
-    fn generate_proof(alg: ProofAlgorithm, key: &Jwk, issuer_header_oct: &[u8],  payloads: &Payloads) -> Result<String, CustomError>{
+    fn generate_proof(implementation: &AlgorithmsImplementation, alg: ProofAlgorithm, key: &Jwk, issuer_header_oct: &[u8],  payloads: &Payloads) -> Result<String, CustomError>{
         let proof = match alg {
             ProofAlgorithm::BLS12381_SHA256 | ProofAlgorithm::BLS12381_SHAKE256 => {
-                base64url_encode(BBSplusAlgorithm::generate_issuer_proof(alg, payloads, key, issuer_header_oct)?)
+                base64url_encode(alg.bbs_generate_issuer_proof(implementation, payloads, key, issuer_header_oct)?)
             },
             ProofAlgorithm::SU_ES256 => todo!(),
             ProofAlgorithm::MAC_H256 => todo!(),
@@ -116,13 +122,15 @@ impl JwpIssued {
             ProofAlgorithm::BLS12381_SHAKE256_PROOF => todo!("This is valid only in presented JWPs"),
         };
 
+        // let proof = base64url_encode(alg.generate_issuer_proof(payloads, key, issuer_header_oct)?);
+
         Ok(proof)
     }
 
-    fn verify_proof(alg: ProofAlgorithm, key: &Jwk, proof: &[u8], issuer_header_oct: &[u8], payloads: &Payloads) -> Result<(), CustomError> {
+    fn verify_proof(implementation: &AlgorithmsImplementation, alg: ProofAlgorithm, key: &Jwk, proof: &[u8], issuer_header_oct: &[u8], payloads: &Payloads) -> Result<(), CustomError> {
         let check = match alg {
             ProofAlgorithm::BLS12381_SHA256 | ProofAlgorithm::BLS12381_SHAKE256 => {
-                BBSplusAlgorithm::verify_issuer_proof(alg,  &key, proof, issuer_header_oct, payloads)
+                alg.bbs_verify_issuer_proof(implementation,  &key, proof, issuer_header_oct, payloads)
             },
             ProofAlgorithm::SU_ES256 => todo!(),
             ProofAlgorithm::MAC_H256 => todo!(),
@@ -135,6 +143,7 @@ impl JwpIssued {
             ProofAlgorithm::BLS12381_SHAKE256_PROOF => panic!("This is valid only in presented JWPs"),
         };
 
+        // let check = alg.verify_issuer_proof( &key, proof, issuer_header_oct, payloads);
         check
     }
 

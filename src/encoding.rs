@@ -1,6 +1,8 @@
 use data_encoding::BASE64URL_NOPAD;
 use serde::{Deserialize, Serialize};
 
+use crate::jpa::bbs_plus::BBSAlgorithm;
+
 
 pub enum SerializationType {
     COMPACT,
@@ -46,16 +48,17 @@ impl Base64UrlDecodedSerializable {
 }
 
 
+// pub struct EncondingKey {
+//     //TODO: family attribute implement something like this
+//     //             ProofAlgorithm::EdDSA => AlgorithmFamily::Ed,
+//     //             ProofAlgorithm::BBS_X (or BBS_BLS12381_SHA256, BBS_BLS12381_SHAKE256) => AlgorithmFamily::Bls12381
+// }
 
-pub struct EncondingKey {
-    //TODO: family attribute implement something like this
-    //             ProofAlgorithm::EdDSA => AlgorithmFamily::Ed,
-    //             ProofAlgorithm::BBS_X (or BBS_BLS12381_SHA256, BBS_BLS12381_SHAKE256) => AlgorithmFamily::Bls12381
-}
+// //TODO: implement From<Jwk> trait that transform a Jwk into and EncodingKey
+// //es. if crv
 
-//TODO: implement From<Jwk> trait that transform a Jwk into and EncodingKey
-//es. if crv
+// pub struct DecondingKey {
 
-pub struct DecondingKey {
+// }
 
-}
+
