@@ -181,22 +181,26 @@ pub enum KeyOps {
   /// Derive bits not to be used as a key.
   DeriveBits,
 
-
-  //TODO: maybe add ProofGeneration and ProofVerification
+  /// Generate a proof
+  ProofGeneration,
+  ///Verify a proof
+  ProofVerification
 }
 
 
 impl KeyOps {
     pub const fn inverse(&self) -> Self {
         match self {
-          Self::Sign => Self::Verify,
-          Self::Verify => Self::Sign,
-          Self::Encrypt => Self::Decrypt,
-          Self::Decrypt => Self::Encrypt,
-          Self::WrapKey => Self::UnwrapKey,
-          Self::UnwrapKey => Self::WrapKey,
-          Self::DeriveKey => Self::DeriveKey,
-          Self::DeriveBits => Self::DeriveBits,
+            Self::Sign => Self::Verify,
+            Self::Verify => Self::Sign,
+            Self::Encrypt => Self::Decrypt,
+            Self::Decrypt => Self::Encrypt,
+            Self::WrapKey => Self::UnwrapKey,
+            Self::UnwrapKey => Self::WrapKey,
+            Self::DeriveKey => Self::DeriveKey,
+            Self::DeriveBits => Self::DeriveBits,
+            Self::ProofGeneration => Self::ProofVerification,
+            Self::ProofVerification => Self::ProofVerification,
         }
       }
 }

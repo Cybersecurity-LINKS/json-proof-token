@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
-use crate::jwk::alg_parameters::JwkAlgorithmParameters::OctetKeyPair;
+use std::fmt;
 
+use serde::{Deserialize, Serialize};
 use crate::{jpa::algs::ProofAlgorithm, encoding::base64url_encode};
 
 use super::{types::KeyType, curves::EllipticCurveTypes, key::Jwk};
@@ -14,6 +14,14 @@ pub enum Algorithm {
     // Signature(SignatureAlgorithm), https://datatracker.ietf.org/doc/html/rfc7518#section-3
     // KeyManagement(KeyManagementAlgorithm), https://datatracker.ietf.org/doc/html/rfc7518#section-4
     // Encryption(EncryptionAlgorithm), https://datatracker.ietf.org/doc/html/rfc7518#section-5
+}
+
+impl fmt::Display for Algorithm {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Algorithm::Proof(proof_algorithm) => write!(f, "{}", proof_algorithm),
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]

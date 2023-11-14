@@ -1,3 +1,5 @@
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
@@ -31,6 +33,28 @@ pub enum ProofAlgorithm {
   #[serde(rename = "MAC-H256K")]
   MAC_H256K
 }
+
+
+impl fmt::Display for ProofAlgorithm {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+      let variant_str = match self {
+          ProofAlgorithm::BLS12381_SHA256 => "BLS12381_SHA256",
+          ProofAlgorithm::BLS12381_SHAKE256 => "BLS12381_SHAKE256",
+          ProofAlgorithm::BLS12381_SHA256_PROOF => "BLS12381_SHA256_PROOF",
+          ProofAlgorithm::BLS12381_SHAKE256_PROOF => "BLS12381_SHAKE256_PROOF",
+          ProofAlgorithm::SU_ES256 => "SU_ES256",
+          ProofAlgorithm::MAC_H256 => "MAC_H256",
+          ProofAlgorithm::MAC_H384 => "MAC_H384",
+          ProofAlgorithm::MAC_H512 => "MAC_H512",
+          ProofAlgorithm::MAC_K25519 => "MAC_K25519",
+          ProofAlgorithm::MAC_K448 => "MAC_K448",
+          ProofAlgorithm::MAC_H256K => "MAC_H256K",
+      };
+      write!(f, "{}", variant_str)
+  }
+}
+
+
 
 
 // pub trait ProofGenerator {
