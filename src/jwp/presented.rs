@@ -1,10 +1,23 @@
-use std::io::Cursor;
+// Copyright 2023 Fondazione LINKS
+
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 
 use serde::{Deserialize, Serialize};
 
 use crate::{jpt::{payloads::{Payloads, PayloadType}, claims::Claims}, errors::CustomError, encoding::{SerializationType, base64url_encode_serializable, base64url_encode, Base64UrlDecodedSerializable, base64url_decode}, jwk::key::Jwk, jpa::{algs::ProofAlgorithm, bbs_plus::BBSplusAlgorithm}};
 
-use super::{header::{IssuerProtectedHeader, PresentationProtectedHeader}, issued::JwpIssued};
+use super::header::{IssuerProtectedHeader, PresentationProtectedHeader};
 
 /// Takes the result of a rsplit and ensure we only get 4 parts (JwpPresented)
 /// Errors if we don't
