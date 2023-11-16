@@ -1,5 +1,9 @@
 # json-proof-token
 
+![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)
+[![](https://img.shields.io/crates/v/json-proof-token?style=flat-square)](https://crates.io/crates/json-proof-token)
+[![](https://img.shields.io/docsrs/json-proof-token?style=flat-square)](https://docs.rs/json-proof-token/)
+
 ## Description
 
 Rust library implementing the new [JOSE Working Group](https://datatracker.ietf.org/wg/jose/documents/) drafts:
@@ -126,7 +130,7 @@ Add this to your Cargo.toml:
 
 ```
 [dependencies]
-json-proof-token = "0.1.0"
+json-proof-token = "0.1.1"
 ```
 
 ### Example
