@@ -57,6 +57,8 @@ impl JwkAlgorithmParameters {
 
 
 
+/// For know thir implementation refers to this: https://www.rfc-editor.org/rfc/rfc8037.html
+/// But later could be changed to this: https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations-03
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct JwkOctetKeyPairParameters {
     pub kty: KeyType, 
