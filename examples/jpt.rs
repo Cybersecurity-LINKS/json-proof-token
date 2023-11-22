@@ -17,7 +17,7 @@
 
 use std::collections::HashMap;
 
-use jsonprooftoken::{jpt::claims::JptClaims, jwp::{header::{IssuerProtectedHeader, PresentationProtectedHeader}, issued::JwpIssued, presented::JwpPresented}, jpa::{algs::ProofAlgorithm, bbs::{ZkryptiumImplementation, BBSImplementation}, su::SUImplementation, mac::MACImplementation}, encoding::{base64url_encode, SerializationType}, jwk::{key::Jwk, types::KeyPairSubtype, alg_parameters::JwkAlgorithmParameters}};
+use jsonprooftoken::{jpt::claims::JptClaims, jwp::{header::{IssuerProtectedHeader, PresentationProtectedHeader}, issued::{JwpIssued, self}, presented::JwpPresented}, jpa::{algs::ProofAlgorithm, bbs::{ZkryptiumImplementation, BBSImplementation}, su::SUImplementation, mac::MACImplementation}, encoding::{base64url_encode, SerializationType}, jwk::{key::Jwk, types::KeyPairSubtype, alg_parameters::JwkAlgorithmParameters}};
 use serde::Serialize;
 use serde_json::Value;
 
@@ -78,11 +78,14 @@ fn main() {
 
     println!("Issued Header: {:?}", issued_header);
 
-    let mut issued_jwp = JwpIssued::new(
-        BBSImplementation::default(),
-        SUImplementation::default(),
-        MACImplementation::default()
-    );
+    //to handle other algorithm implementation
+    // let mut issued_jwp = JwpIssued::new(
+    //     BBSImplementation::default(),
+    //     SUImplementation::default(),
+    //     MACImplementation::default()
+    // );
+
+    let mut issued_jwp = JwpIssued::default();
 
     issued_jwp.set_issuer_protected_header(issued_header);
     issued_jwp.set_payloads(payloads);
@@ -97,11 +100,7 @@ fn main() {
     println!("Compact JWP: {}", compact_issued_jwp);
 
 
-    let mut decoded_issued_jwp = JwpIssued::new(
-        BBSImplementation::default(),
-        SUImplementation::default(),
-        MACImplementation::default()
-    );
+    let mut decoded_issued_jwp = JwpIssued::default();
 
     decoded_issued_jwp.decode(compact_issued_jwp, SerializationType::COMPACT, &bbs_jwk.to_public().unwrap()).unwrap();
 
@@ -114,11 +113,8 @@ fn main() {
         nonce: Some("wrmBRkKtXjQ".to_owned())
     };
 
-    let mut presentation_jwp = JwpPresented::new(
-        BBSImplementation::default(),
-        SUImplementation::default(),
-        MACImplementation::default()
-    );
+    let mut presentation_jwp = JwpPresented::default();
+
     presentation_jwp.set_issuer_protected_header(decoded_issued_jwp.get_issuer_protected_header().unwrap());
     presentation_jwp.set_presentation_protected_header(presentation_header);
     presentation_jwp.set_payloads(decoded_issued_jwp.get_payloads().unwrap());
@@ -130,11 +126,7 @@ fn main() {
 
     println!("Compact Presented JWP: {}", compact_presented_jwp);
 
-    let mut decoded_presentation_jwp = JwpPresented::new(
-        BBSImplementation::default(),
-        SUImplementation::default(),
-        MACImplementation::default()
-    );
+    let mut decoded_presentation_jwp = JwpPresented::default();
 
     decoded_presentation_jwp.decode(compact_presented_jwp, SerializationType::COMPACT, &bbs_jwk.to_public().unwrap()).unwrap();
 

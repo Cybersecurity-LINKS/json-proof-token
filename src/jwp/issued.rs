@@ -16,7 +16,7 @@
 
 use serde::{Deserialize, Serialize, de::MapAccess};
 
-use crate::{jpt::{payloads::{Payloads, PayloadType}, claims::Claims}, encoding::{base64url_encode, base64url_encode_serializable, SerializationType, Base64UrlDecodedSerializable, self, base64url_decode}, jwk::key::Jwk, jpa::{algs::ProofAlgorithm, bbs::{BBSAlgorithm, ZkryptiumImplementation, BBSImplementation}, su::{SUAlgorithm, SUImplementation}, mac::{MACAlgorithm, MACImplementation}}, errors::CustomError};
+use crate::{jpt::{payloads::{Payloads, PayloadType}, claims::Claims}, encoding::{base64url_encode, base64url_encode_serializable, SerializationType, Base64UrlDecodedSerializable, self, base64url_decode}, jwk::key::Jwk, jpa::{algs::ProofAlgorithm, bbs::{BBSAlgorithm, ZkryptiumImplementation, BBSImplementation}, su::{SUAlgorithm, SUImplementation, DefaultSUImplementation}, mac::{MACAlgorithm, MACImplementation, DefaultMACImplementation}}, errors::CustomError};
 
 use super::{header::{IssuerProtectedHeader, PresentationProtectedHeader}, presented::JwpPresented};
 
@@ -49,6 +49,18 @@ pub struct JwpIssued<B: BBSAlgorithm, S: SUAlgorithm, M: MACAlgorithm>{
     su: SUImplementation<S>,
     #[serde(skip_serializing)]
     mac: MACImplementation<M>
+}
+
+impl Default for JwpIssued <ZkryptiumImplementation, DefaultSUImplementation, DefaultMACImplementation> {
+    fn default() -> Self {
+        Self { 
+            issuer_protected_header: None, 
+            payloads: None, 
+            proof: None, 
+            bbs: BBSImplementation::default(), 
+            su: SUImplementation::default(), 
+            mac: MACImplementation::default() }
+    }
 }
 
 
