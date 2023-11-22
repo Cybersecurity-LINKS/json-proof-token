@@ -18,10 +18,27 @@ use std::mem::ManuallyDrop;
 
 use serde::{Deserialize, Serialize};
 
+
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+pub struct MACImplementation<M: MACAlgorithm> (M);
+
+impl <M: MACAlgorithm>MACImplementation<M> {
+    pub fn new(implementation: M) -> Self {
+        Self(implementation)
+    }
+}
+
+impl Default for MACImplementation<DefaultMACImplementation> {
+    fn default() -> Self {
+        Self(DefaultMACImplementation)
+    }
+}
+
+
 pub trait MACAlgorithm {
     //TODO: MAC functions    
 }
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
-pub struct MACImplementation;
+pub struct DefaultMACImplementation;
 
-impl MACAlgorithm for MACImplementation{}
+impl MACAlgorithm for DefaultMACImplementation{}

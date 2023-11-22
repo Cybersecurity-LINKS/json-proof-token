@@ -17,7 +17,7 @@
 
 use std::collections::HashMap;
 
-use jsonprooftoken::{jpt::claims::JptClaims, jwp::{header::{IssuerProtectedHeader, PresentationProtectedHeader}, issued::JwpIssued, presented::JwpPresented}, jpa::{algs::{ProofAlgorithm, AlgorithmsImplementation}, bbs_plus::ZkryptiumImplementation, su::SUImplementation, mac::MACImplementation}, encoding::{base64url_encode, SerializationType}, jwk::{key::Jwk, types::KeyPairSubtype, alg_parameters::JwkAlgorithmParameters}};
+use jsonprooftoken::{jpt::claims::JptClaims, jwp::{header::{IssuerProtectedHeader, PresentationProtectedHeader}, issued::JwpIssued, presented::JwpPresented}, jpa::{algs::ProofAlgorithm, bbs::{ZkryptiumImplementation, BBSImplementation}, su::SUImplementation, mac::MACImplementation}, encoding::{base64url_encode, SerializationType}, jwk::{key::Jwk, types::KeyPairSubtype, alg_parameters::JwkAlgorithmParameters}};
 use serde::Serialize;
 use serde_json::Value;
 
@@ -43,10 +43,6 @@ fn main() {
     //     })),
     // };
 
-    let mut implementations = AlgorithmsImplementation::default();
-    implementations.set_bbs_impl(ZkryptiumImplementation);
-    
-   
 
     let custom_claims = serde_json::json!({
         "family_name": "Doe",
@@ -82,17 +78,32 @@ fn main() {
 
     println!("Issued Header: {:?}", issued_header);
 
-    let issued_jwp = JwpIssued::new(issued_header, payloads);
+    let mut issued_jwp = JwpIssued::new(
+        BBSImplementation::default(),
+        SUImplementation::default(),
+        MACImplementation::default()
+    );
+
+    issued_jwp.set_issuer_protected_header(issued_header);
+    issued_jwp.set_payloads(payloads);
+
     println!("ISSUED JWP: \n{:?}", issued_jwp);
 
 
     let bbs_jwk = Jwk::generate(KeyPairSubtype::BLS12381SHA256).unwrap();
     println!("BBS Jwk: {:?}", bbs_jwk);
     
-    let compact_issued_jwp = issued_jwp.encode(SerializationType::COMPACT, &bbs_jwk, &implementations).unwrap();
+    let compact_issued_jwp = issued_jwp.encode(SerializationType::COMPACT, &bbs_jwk).unwrap();
     println!("Compact JWP: {}", compact_issued_jwp);
 
-    let decoded_issued_jwp = JwpIssued::decode(compact_issued_jwp, SerializationType::COMPACT, &bbs_jwk.to_public().unwrap(), &implementations).unwrap();
+
+    let mut decoded_issued_jwp = JwpIssued::new(
+        BBSImplementation::default(),
+        SUImplementation::default(),
+        MACImplementation::default()
+    );
+
+    decoded_issued_jwp.decode(compact_issued_jwp, SerializationType::COMPACT, &bbs_jwk.to_public().unwrap()).unwrap();
 
     println!("DECODED ISSUED JWP \n{:?}", decoded_issued_jwp);
 
@@ -103,20 +114,29 @@ fn main() {
         nonce: Some("wrmBRkKtXjQ".to_owned())
     };
 
-    
-    // This is an alternative
-    // let presentation_jwp = decoded_issued_jwp.present(SerializationType::COMPACT, &bbs_jwk.to_public().unwrap(), presentation_header);
-    
-    
-    let mut presentation_jwp = JwpPresented::new(decoded_issued_jwp.get_issuer_protected_header().clone(),presentation_header, decoded_issued_jwp.get_payloads().clone());
+    let mut presentation_jwp = JwpPresented::new(
+        BBSImplementation::default(),
+        SUImplementation::default(),
+        MACImplementation::default()
+    );
+    presentation_jwp.set_issuer_protected_header(decoded_issued_jwp.get_issuer_protected_header().unwrap());
+    presentation_jwp.set_presentation_protected_header(presentation_header);
+    presentation_jwp.set_payloads(decoded_issued_jwp.get_payloads().unwrap());
+
     presentation_jwp.set_disclosed(1, false).unwrap();
     presentation_jwp.set_disclosed(3, false).unwrap();
 
-    let compact_presented_jwp = presentation_jwp.encode(SerializationType::COMPACT, &bbs_jwk.to_public().unwrap(), decoded_issued_jwp.get_proof().unwrap(), &implementations).unwrap();
+    let compact_presented_jwp = presentation_jwp.encode(SerializationType::COMPACT, &bbs_jwk.to_public().unwrap(), decoded_issued_jwp.get_proof().unwrap()).unwrap();
 
     println!("Compact Presented JWP: {}", compact_presented_jwp);
 
-    let decoded_presentation_jwp = JwpPresented::decode(compact_presented_jwp, SerializationType::COMPACT, &bbs_jwk.to_public().unwrap(), &implementations).unwrap();
+    let mut decoded_presentation_jwp = JwpPresented::new(
+        BBSImplementation::default(),
+        SUImplementation::default(),
+        MACImplementation::default()
+    );
+
+    decoded_presentation_jwp.decode(compact_presented_jwp, SerializationType::COMPACT, &bbs_jwk.to_public().unwrap()).unwrap();
 
     println!("DECODED PRESENTED JWP \n{:?}", decoded_presentation_jwp);
 

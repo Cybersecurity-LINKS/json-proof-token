@@ -17,7 +17,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{jpt::{payloads::{Payloads, PayloadType}, claims::Claims}, errors::CustomError, encoding::{SerializationType, base64url_encode_serializable, base64url_encode, Base64UrlDecodedSerializable, base64url_decode}, jwk::key::Jwk, jpa::{algs::{ProofAlgorithm, AlgorithmsImplementation}, bbs_plus::BBSAlgorithm, su::SUAlgorithm, mac::MACAlgorithm}};
+use crate::{jpt::{payloads::{Payloads, PayloadType}, claims::Claims}, errors::CustomError, encoding::{SerializationType, base64url_encode_serializable, base64url_encode, Base64UrlDecodedSerializable, base64url_decode}, jwk::key::Jwk, jpa::{algs::ProofAlgorithm, bbs::{BBSAlgorithm, BBSImplementation}, su::{SUAlgorithm, SUImplementation}, mac::{MACAlgorithm, MACImplementation}}};
 
 use super::{header::{IssuerProtectedHeader, PresentationProtectedHeader}, issued::JwpIssued};
 
@@ -34,35 +34,129 @@ macro_rules! expect_four {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct JwpPresented {
-    issuer_protected_header: IssuerProtectedHeader,
-    presentation_protected_header: PresentationProtectedHeader,
-    payloads: Payloads,
-    proof: Option<Vec<u8>>
+pub struct JwpPresented <B: BBSAlgorithm, S: SUAlgorithm, M: MACAlgorithm>{
+    issuer_protected_header: Option<IssuerProtectedHeader>,
+    presentation_protected_header: Option<PresentationProtectedHeader>,
+    payloads: Option<Payloads>,
+    proof: Option<Vec<u8>>,
+
+
+    #[serde(skip_serializing)]
+    bbs: BBSImplementation<B>,
+    #[serde(skip_serializing)]
+    su: SUImplementation<S>,
+    #[serde(skip_serializing)]
+    mac: MACImplementation<M>
 }
 
-impl JwpPresented {
+impl <B: BBSAlgorithm, S: SUAlgorithm, M: MACAlgorithm> JwpPresented <B, S, M> {
 
-    pub fn new(issuer_protected_header: IssuerProtectedHeader, presentation_protected_header: PresentationProtectedHeader, payloads: Payloads) -> Self {
-        Self { issuer_protected_header, presentation_protected_header, payloads, proof: None}
+    pub fn new(bbs: BBSImplementation<B>, su: SUImplementation<S>, mac: MACImplementation<M>) -> Self{
+        Self { 
+            issuer_protected_header: None,
+            presentation_protected_header: None,
+            payloads: None, 
+            proof: None, 
+            bbs: bbs, 
+            su: su, 
+            mac: mac 
+        }
     }
 
-    pub fn encode(&self, serialization: SerializationType, key: &Jwk, issuer_proof: &[u8], implementation: &AlgorithmsImplementation) -> Result<String, CustomError> {
+    
+    pub fn get_issuer_protected_header(&self) -> Option<&IssuerProtectedHeader> {
+        self.issuer_protected_header.as_ref()
+    }
+
+    // Setter for issuer_protected_header
+    pub fn set_issuer_protected_header(&mut self, value: &IssuerProtectedHeader) {
+        self.issuer_protected_header = Some(value.clone());
+    }
+
+        
+    pub fn get_presentation_protected_header(&self) -> Option<&PresentationProtectedHeader> {
+        self.presentation_protected_header.as_ref()
+    }
+
+    // Setter for issuer_protected_header
+    pub fn set_presentation_protected_header(&mut self, value: PresentationProtectedHeader) {
+        self.presentation_protected_header = Some(value);
+    }
+
+    // Getter for payloads
+    pub fn get_payloads(&self) -> Option<&Payloads> {
+        self.payloads.as_ref()
+    }
+
+    // Setter for payloads
+    pub fn set_payloads(&mut self, value: &Payloads) {
+        self.payloads = Some(value.clone());
+    }
+
+    // Getter for proof
+    pub fn get_proof(&self) -> Option<&[u8]> {
+        self.proof.as_deref()
+    }
+
+    fn set_proof(&mut self, proof: Vec<u8>) {
+        self.proof = Some(proof);
+    }
+
+
+    pub fn set_disclosed(&mut self, index: usize, disclosed: bool) -> Result<(), CustomError> {
+        if let Some(payloads) = self.payloads.as_mut() {
+            payloads.set_disclosed(index, disclosed);
+            Ok(())
+        } else {
+            Err(CustomError::MissingParameter("payloads is None".to_owned()))
+        }
+    }
+
+    pub fn get_claims(&self) -> Option<&Claims> {
+        self.issuer_protected_header
+            .as_ref() // Get a reference to the Option<IssuerProtectedHeader>
+            .and_then(|header| header.claims.as_ref()) // Get a reference to the Option<Claims> inside IssuerProtectedHeader
+    }
+
+
+
+    pub fn encode(&self, serialization: SerializationType, key: &Jwk, issuer_proof: &[u8]) -> Result<String, CustomError> {
         // let encoded_issuer_header = base64url_encode_serializable(&self.issuer_protected_header);
         // let encoded_presentation_header = base64url_encode_serializable(&self.presentation_protected_header);
 
-        let issuer_header_oct = serde_json::to_vec(&self.issuer_protected_header).unwrap();
-        let presentation_header_oct = serde_json::to_vec(&self.presentation_protected_header).unwrap();
 
-        let proof = Self::generate_proof(self.presentation_protected_header.alg, key, &issuer_proof, &issuer_header_oct, &presentation_header_oct, &self.payloads, implementation)?;
+        // Check if issuer_protected_header is Some
+        let issuer_protected_header = match &self.issuer_protected_header {
+            Some(header) => header,
+            None => return Err(CustomError::MissingParameter("issuer_protected_header is None".to_owned())),
+        };
 
-        let jwp = Self::serialize(serialization, &presentation_header_oct, &issuer_header_oct, &self.payloads, &proof);
+        // Check if presentation_protected_header is Some
+        let presentation_protected_header = match &self.presentation_protected_header {
+            Some(header) => header,
+            None => return Err(CustomError::MissingParameter("presentation_protected_header is None".to_owned())),
+        };
+
+        // Check if payloads is Some
+        let payloads = match &self.payloads {
+            Some(payloads) => payloads,
+            None => return Err(CustomError::MissingParameter("payloads is None".to_owned())),
+        };
+
+
+
+        let issuer_header_oct = serde_json::to_vec(issuer_protected_header).unwrap();
+        let presentation_header_oct = serde_json::to_vec(presentation_protected_header).unwrap();
+
+        let proof = Self::generate_proof(presentation_protected_header.alg, key, &issuer_proof, &issuer_header_oct, &presentation_header_oct, payloads)?;
+
+        let jwp = Self::serialize(serialization, &presentation_header_oct, &issuer_header_oct, payloads, &proof);
         
         Ok(jwp)
     }
 
 
-    pub fn decode(encoded_jwp: String, serialization: SerializationType, key: &Jwk, implementation: &AlgorithmsImplementation) -> Result<Self, CustomError> {
+    pub fn decode(&mut self, encoded_jwp: String, serialization: SerializationType, key: &Jwk) -> Result<(), CustomError> {
         match serialization {
             SerializationType::COMPACT => {
                 let (encoded_presentation_protected_header, encoded_issuer_protected_header, encoded_payloads, encoded_proof) = expect_four!(encoded_jwp.splitn(4, '.'));
@@ -81,10 +175,14 @@ impl JwpPresented {
                 let issuer_header_oct = serde_json::to_vec(&issuer_protected_header).unwrap();
                 let presentation_header_oct = serde_json::to_vec(&presentation_protected_header).unwrap();
 
-                match Self::verify_proof(presentation_protected_header.alg, key, &proof, &presentation_header_oct, &issuer_header_oct, &payloads, implementation) {
+                match Self::verify_proof(presentation_protected_header.alg, key, &proof, &presentation_header_oct, &issuer_header_oct, &payloads) {
                     Ok(_) => {
                         println!("Presented Proof Valid!!!!");
-                        Ok(Self{issuer_protected_header, payloads, proof: Some(proof), presentation_protected_header})
+                        self.set_issuer_protected_header(&issuer_protected_header);
+                        self.set_presentation_protected_header(presentation_protected_header);
+                        self.set_payloads(&payloads);
+                        self.set_proof(proof);
+                        Ok(())
                     },
                     Err(e) => Err(e),
                 }            
@@ -94,34 +192,11 @@ impl JwpPresented {
     }
 
 
-    pub fn set_disclosed(&mut self, index: usize, disclosed: bool) -> Result<(), CustomError>{
-        self.payloads.set_disclosed(index, disclosed)
-    }
 
-    pub fn get_issuer_protected_header(&self) -> &IssuerProtectedHeader {
-        &self.issuer_protected_header
-    }
-
-    pub fn get_presentation_protected_header(&self) -> &PresentationProtectedHeader {
-        &self.presentation_protected_header
-    }
-
-    pub fn get_claims(&self) -> &Option<Claims>{
-        &self.issuer_protected_header.claims
-    }
-
-    pub fn get_payloads(&self) -> &Payloads {
-        &self.payloads
-    }
-
-    pub fn get_proof(&self) -> &Option<Vec<u8>> {
-        &self.proof
-    }
-
-    fn generate_proof(alg: ProofAlgorithm, key: &Jwk, issuer_proof: &[u8], issuer_header_oct: &[u8], presentation_header_oct: &[u8], payloads: &Payloads, implementation: &AlgorithmsImplementation) -> Result<String, CustomError> {
+    fn generate_proof(alg: ProofAlgorithm, key: &Jwk, issuer_proof: &[u8], issuer_header_oct: &[u8], presentation_header_oct: &[u8], payloads: &Payloads) -> Result<String, CustomError> {
         let proof = match alg {
             ProofAlgorithm::BLS12381_SHA256_PROOF | ProofAlgorithm::BLS12381_SHAKE256_PROOF => {
-                base64url_encode(alg.bbs_generate_presentation_proof( implementation, issuer_proof, payloads, key, issuer_header_oct, presentation_header_oct)?)
+                base64url_encode(alg.bbs_generate_presentation_proof::<B>( issuer_proof, payloads, key, issuer_header_oct, presentation_header_oct)?)
             },
             ProofAlgorithm::SU_ES256 => todo!(),
             ProofAlgorithm::MAC_H256 => todo!(),
@@ -137,10 +212,10 @@ impl JwpPresented {
         Ok(proof)
     }
 
-    fn verify_proof(alg: ProofAlgorithm, key: &Jwk, proof: &[u8], presentation_header_oct: &[u8], issuer_header_oct: &[u8], payloads: &Payloads, implementation: &AlgorithmsImplementation) -> Result<(), CustomError> {
+    fn verify_proof(alg: ProofAlgorithm, key: &Jwk, proof: &[u8], presentation_header_oct: &[u8], issuer_header_oct: &[u8], payloads: &Payloads) -> Result<(), CustomError> {
         let check = match alg {
             ProofAlgorithm::BLS12381_SHA256_PROOF | ProofAlgorithm::BLS12381_SHAKE256_PROOF => {
-                alg.bbs_verify_presentation_proof(implementation,&key, proof, presentation_header_oct, issuer_header_oct, payloads)
+                alg.bbs_verify_presentation_proof::<B>(key, proof, presentation_header_oct, issuer_header_oct, payloads)
             },
             ProofAlgorithm::SU_ES256 => todo!(),
             ProofAlgorithm::MAC_H256 => todo!(),

@@ -19,7 +19,7 @@ use serde_json::Value;
 
 use crate::{errors::CustomError, jpt::payloads::Payloads, jwk::{key::Jwk, alg_parameters::{JwkAlgorithmParameters, Algorithm}, utils::check_alg_curve_compatibility}, encoding::base64url_decode};
 
-use super::{bbs_plus::{BBSAlgorithm, ZkryptiumImplementation}, su::{SUAlgorithm, SUImplementation}, mac::{MACAlgorithm, MACImplementation}};
+use super::{bbs::{BBSAlgorithm, ZkryptiumImplementation}, su::{SUAlgorithm, SUImplementation}, mac::{MACAlgorithm, MACImplementation}};
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 #[allow(non_camel_case_types)]
@@ -54,35 +54,35 @@ pub enum ProofAlgorithm {
 }
 
 
-pub struct AlgorithmsImplementation {
-  bbs: Box<dyn BBSAlgorithm>,
-  su: Box<dyn SUAlgorithm>,
-  mac: Box<dyn MACAlgorithm>
-}
+// pub struct AlgorithmsImplementation {
+//   bbs: Box<dyn BBSAlgorithm>,
+//   su: Box<dyn SUAlgorithm>,
+//   mac: Box<dyn MACAlgorithm>
+// }
 
-impl Default for AlgorithmsImplementation {
-    fn default() -> Self {
-        Self{bbs: Box::new(ZkryptiumImplementation), su: Box::new(SUImplementation), mac: Box::new(MACImplementation)}
-    }
-}
+// impl Default for AlgorithmsImplementation {
+//     fn default() -> Self {
+//         Self{bbs: Box::new(ZkryptiumImplementation), su: Box::new(SUImplementation), mac: Box::new(MACImplementation)}
+//     }
+// }
 
-impl AlgorithmsImplementation {
-  pub fn set_bbs_impl(&mut self, implementation: impl BBSAlgorithm + 'static) {
-    self.bbs = Box::new(implementation);
-  }
+// impl AlgorithmsImplementation {
+//   pub fn set_bbs_impl(&mut self, implementation: impl BBSAlgorithm + 'static) {
+//     self.bbs = Box::new(implementation);
+//   }
 
-  pub fn set_su_impl(&mut self, implementation: impl SUAlgorithm + 'static) {
-    self.su = Box::new(implementation);
-  }
+//   pub fn set_su_impl(&mut self, implementation: impl SUAlgorithm + 'static) {
+//     self.su = Box::new(implementation);
+//   }
 
-  pub fn set_mac_impl(&mut self, implementation: impl MACAlgorithm + 'static) {
-    self.mac = Box::new(implementation);
-  }
-}
+//   pub fn set_mac_impl(&mut self, implementation: impl MACAlgorithm + 'static) {
+//     self.mac = Box::new(implementation);
+//   }
+// }
 
 
 impl ProofAlgorithm{
-  pub fn bbs_generate_issuer_proof(&self, implementation: &AlgorithmsImplementation, payloads: &Payloads, key: &Jwk, issuer_header: &[u8]) -> Result<Vec<u8>, CustomError> {
+  pub fn bbs_generate_issuer_proof<B: BBSAlgorithm>(&self, payloads: &Payloads, key: &Jwk, issuer_header: &[u8]) -> Result<Vec<u8>, CustomError> {
     let key_params = match &key.key_params {
             JwkAlgorithmParameters::OctetKeyPair(params) => {
                 if params.is_private() == false {
@@ -100,8 +100,8 @@ impl ProofAlgorithm{
       let sk = base64url_decode(&key_params.d.as_ref().unwrap());
       let messages: Vec<Vec<u8>> = payloads.0.iter().map(|p| serde_json::to_vec(&p.0).unwrap()).collect();
       let proof = match self {
-        Self::BLS12381_SHA256 => implementation.bbs.sign_bls12381_sha256(&sk, &pk, issuer_header, messages),
-        Self::BLS12381_SHAKE256 => implementation.bbs.sign_bls12381_shake256(&sk, &pk, issuer_header, messages),
+        Self::BLS12381_SHA256 => B::sign_bls12381_sha256(&sk, &pk, issuer_header, messages),
+        Self::BLS12381_SHAKE256 => B::sign_bls12381_shake256(&sk, &pk, issuer_header, messages),
         _ => unreachable!("This should NOT happen!")
       };
       
@@ -109,7 +109,7 @@ impl ProofAlgorithm{
     }
   }
 
-  pub fn bbs_verify_issuer_proof(&self, implementation: &AlgorithmsImplementation, key: &Jwk, proof: &[u8], issuer_header: &[u8], payloads: &Payloads) -> Result<(), CustomError> {
+  pub fn bbs_verify_issuer_proof<B: BBSAlgorithm>(&self, key: &Jwk, proof: &[u8], issuer_header: &[u8], payloads: &Payloads) -> Result<(), CustomError> {
     let key_params = match &key.key_params {
       JwkAlgorithmParameters::OctetKeyPair(params) => {
           if params.is_public() == false {
@@ -127,10 +127,10 @@ impl ProofAlgorithm{
         let messages: Vec<Vec<u8>> = payloads.0.iter().map(|p| serde_json::to_vec(&p.0).unwrap()).collect();  
         let check = match self {
             Self::BLS12381_SHA256 => {
-              implementation.bbs.verify_bls12381_sha256(&pk, proof, issuer_header, messages)
+              B::verify_bls12381_sha256(&pk, proof, issuer_header, messages)
             },
             Self::BLS12381_SHAKE256 => {
-              implementation.bbs.verify_bls12381_shake256(&pk, proof, issuer_header, messages)
+              B::verify_bls12381_shake256(&pk, proof, issuer_header, messages)
             },
             _ => unreachable!()
         };
@@ -139,7 +139,7 @@ impl ProofAlgorithm{
     }
   }
 
-  pub fn bbs_generate_presentation_proof(&self, implementation: &AlgorithmsImplementation, signature: &[u8], payloads: &Payloads, key: &Jwk, issuer_header: &[u8], presentation_header: &[u8]) -> Result<Vec<u8>, CustomError> {
+  pub fn bbs_generate_presentation_proof<B: BBSAlgorithm>(&self, signature: &[u8], payloads: &Payloads, key: &Jwk, issuer_header: &[u8], presentation_header: &[u8]) -> Result<Vec<u8>, CustomError> {
     let key_params = match &key.key_params {
         JwkAlgorithmParameters::OctetKeyPair(params) => {
             if params.is_public() == false {
@@ -159,10 +159,10 @@ impl ProofAlgorithm{
 
         let proof = match self {
             Self::BLS12381_SHA256_PROOF => {
-              implementation.bbs.proofgen_bls12381_sha256(&pk, signature, issuer_header, presentation_header, messages, &revealed_message_indexes)
+              B::proofgen_bls12381_sha256(&pk, signature, issuer_header, presentation_header, messages, &revealed_message_indexes)
             },
             Self::BLS12381_SHAKE256_PROOF => {
-              implementation.bbs.proofgen_bls12381_shake256(&pk, signature, issuer_header, presentation_header, messages, &revealed_message_indexes)
+              B::proofgen_bls12381_shake256(&pk, signature, issuer_header, presentation_header, messages, &revealed_message_indexes)
             },
             _ => unreachable!()
         };
@@ -171,7 +171,7 @@ impl ProofAlgorithm{
     }
   }
   
-  pub fn bbs_verify_presentation_proof(&self, implementation: &AlgorithmsImplementation, key: &Jwk, proof: &[u8], presentation_header: &[u8], issuer_header: &[u8], payloads: &Payloads) -> Result<(), CustomError> {
+  pub fn bbs_verify_presentation_proof<B: BBSAlgorithm>(&self, key: &Jwk, proof: &[u8], presentation_header: &[u8], issuer_header: &[u8], payloads: &Payloads) -> Result<(), CustomError> {
     let key_params = match &key.key_params {
         JwkAlgorithmParameters::OctetKeyPair(params) => {
             if params.is_public() == false {
@@ -191,10 +191,10 @@ impl ProofAlgorithm{
 
         let check = match self {
             Self::BLS12381_SHA256_PROOF => {
-              implementation.bbs.proofverify_bls12381_sha256(&pk, proof, issuer_header, presentation_header, disclosed_messages, &disclosed_indexes)
+              B::proofverify_bls12381_sha256(&pk, proof, issuer_header, presentation_header, disclosed_messages, &disclosed_indexes)
             },
             Self::BLS12381_SHAKE256_PROOF => {
-              implementation.bbs.proofverify_bls12381_sha256(&pk, proof, issuer_header, presentation_header, disclosed_messages, &disclosed_indexes)
+              B::proofverify_bls12381_sha256(&pk, proof, issuer_header, presentation_header, disclosed_messages, &disclosed_indexes)
             },
             _ => unreachable!()
         };

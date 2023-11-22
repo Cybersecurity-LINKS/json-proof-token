@@ -16,11 +16,30 @@
 
 use serde::{Deserialize, Serialize};
 
+
+
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+pub struct SUImplementation<S: SUAlgorithm> (S);
+
+impl <S: SUAlgorithm>SUImplementation<S> {
+    pub fn new(implementation: S) -> Self {
+        Self(implementation)
+    }
+}
+
+impl Default for SUImplementation<DefaultSUImplementation> {
+    fn default() -> Self {
+        Self(DefaultSUImplementation)
+    }
+}
+
+
+
 pub trait SUAlgorithm{
     //TODO: implement SU functions
 }
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
-pub struct SUImplementation;
+pub struct DefaultSUImplementation;
 
-impl SUAlgorithm for SUImplementation{}
+impl SUAlgorithm for DefaultSUImplementation{}

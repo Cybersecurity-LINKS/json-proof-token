@@ -18,7 +18,7 @@
 use data_encoding::BASE64URL_NOPAD;
 use serde::{Deserialize, Serialize};
 
-use crate::jpa::bbs_plus::BBSAlgorithm;
+use crate::jpa::bbs::BBSAlgorithm;
 
 
 pub enum SerializationType {

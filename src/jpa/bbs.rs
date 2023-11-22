@@ -22,23 +22,39 @@ use crate::{jwk::{key::Jwk, utils::{check_alg_curve_compatibility}, alg_paramete
 use super::algs::ProofAlgorithm;
 
 
+
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+pub struct BBSImplementation<B: BBSAlgorithm> (B);
+
+impl <B: BBSAlgorithm>BBSImplementation<B> {
+    pub fn new(implementation: B) -> BBSImplementation<B> {
+        Self(implementation)
+    }
+}
+
+impl Default for BBSImplementation<ZkryptiumImplementation> {
+    fn default() -> Self {
+        Self(ZkryptiumImplementation)
+    }
+}
+
 pub trait BBSAlgorithm
 {
-    fn sign_bls12381_sha256(&self, sk: &[u8], pk: &[u8], header: &[u8], messages: Vec<Vec<u8>>) -> Result<Vec<u8>, CustomError>;
-    fn sign_bls12381_shake256(&self, sk: &[u8], pk: &[u8], header: &[u8], messages: Vec<Vec<u8>>) -> Result<Vec<u8>, CustomError>;
-    fn verify_bls12381_sha256(&self, pk: &[u8], signature: &[u8], header: &[u8], messages: Vec<Vec<u8>>) -> Result<(), CustomError>;
-    fn verify_bls12381_shake256(&self, pk: &[u8], signature: &[u8], header: &[u8], messages: Vec<Vec<u8>>) -> Result<(), CustomError>;
-    fn proofgen_bls12381_sha256(&self, pk: &[u8], signature: &[u8], header: &[u8], ph: &[u8], messages: Vec<Vec<u8>>, disclosed_indexes: &[usize]) -> Result<Vec<u8>, CustomError>;
-    fn proofgen_bls12381_shake256(&self, pk: &[u8], signature: &[u8], header: &[u8], ph: &[u8], messages: Vec<Vec<u8>>, disclosed_indexes: &[usize]) -> Result<Vec<u8>, CustomError>;
-    fn proofverify_bls12381_sha256(&self, pk: &[u8], proof: &[u8], header: &[u8], ph: &[u8], disclosed_messages: Vec<Vec<u8>>, disclosed_indexes: &[usize]) -> Result<(), CustomError>;
-    fn proofverify_bls12381_shake256(&self, pk: &[u8], proof: &[u8], header: &[u8], ph: &[u8], disclosed_messages: Vec<Vec<u8>>, disclosed_indexes: &[usize]) -> Result<(), CustomError>;
+    fn sign_bls12381_sha256(sk: &[u8], pk: &[u8], header: &[u8], messages: Vec<Vec<u8>>) -> Result<Vec<u8>, CustomError>;
+    fn sign_bls12381_shake256(sk: &[u8], pk: &[u8], header: &[u8], messages: Vec<Vec<u8>>) -> Result<Vec<u8>, CustomError>;
+    fn verify_bls12381_sha256(pk: &[u8], signature: &[u8], header: &[u8], messages: Vec<Vec<u8>>) -> Result<(), CustomError>;
+    fn verify_bls12381_shake256(pk: &[u8], signature: &[u8], header: &[u8], messages: Vec<Vec<u8>>) -> Result<(), CustomError>;
+    fn proofgen_bls12381_sha256(pk: &[u8], signature: &[u8], header: &[u8], ph: &[u8], messages: Vec<Vec<u8>>, disclosed_indexes: &[usize]) -> Result<Vec<u8>, CustomError>;
+    fn proofgen_bls12381_shake256(pk: &[u8], signature: &[u8], header: &[u8], ph: &[u8], messages: Vec<Vec<u8>>, disclosed_indexes: &[usize]) -> Result<Vec<u8>, CustomError>;
+    fn proofverify_bls12381_sha256(pk: &[u8], proof: &[u8], header: &[u8], ph: &[u8], disclosed_messages: Vec<Vec<u8>>, disclosed_indexes: &[usize]) -> Result<(), CustomError>;
+    fn proofverify_bls12381_shake256(pk: &[u8], proof: &[u8], header: &[u8], ph: &[u8], disclosed_messages: Vec<Vec<u8>>, disclosed_indexes: &[usize]) -> Result<(), CustomError>;
 }
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 pub struct ZkryptiumImplementation;
 
 impl BBSAlgorithm for ZkryptiumImplementation {
-    fn sign_bls12381_sha256(&self, sk: &[u8], pk: &[u8], header: &[u8], messages: Vec<Vec<u8>>) -> Result<Vec<u8>, CustomError> {
+    fn sign_bls12381_sha256(sk: &[u8], pk: &[u8], header: &[u8], messages: Vec<Vec<u8>>) -> Result<Vec<u8>, CustomError> {
         let pk = BBSplusPublicKey::from_bytes(&pk);
         let sk = BBSplusSecretKey::from_bytes(&sk);
         let messages: Vec<BBSplusMessage> = messages
@@ -50,7 +66,7 @@ impl BBSAlgorithm for ZkryptiumImplementation {
         Ok(signature.to_vec()) //TODO: maybe change the return value to match the exact slice length
     }
 
-    fn sign_bls12381_shake256(&self, sk: &[u8], pk: &[u8], header: &[u8], messages: Vec<Vec<u8>>) -> Result<Vec<u8>, CustomError> {
+    fn sign_bls12381_shake256(sk: &[u8], pk: &[u8], header: &[u8], messages: Vec<Vec<u8>>) -> Result<Vec<u8>, CustomError> {
         let pk = BBSplusPublicKey::from_bytes(pk);
         let sk = BBSplusSecretKey::from_bytes(sk);
         let messages: Vec<BBSplusMessage> = messages
@@ -62,7 +78,7 @@ impl BBSAlgorithm for ZkryptiumImplementation {
         Ok(signature.to_vec())
     }
 
-    fn verify_bls12381_sha256(&self, pk: &[u8], signature: &[u8], header: &[u8], messages: Vec<Vec<u8>>) -> Result<(), CustomError> {
+    fn verify_bls12381_sha256(pk: &[u8], signature: &[u8], header: &[u8], messages: Vec<Vec<u8>>) -> Result<(), CustomError> {
         let pk = BBSplusPublicKey::from_bytes(pk);
         let signature = BBSplusSignature::from_bytes(signature.try_into().unwrap()).unwrap();
         let messages: Vec<BBSplusMessage> = messages
@@ -76,7 +92,7 @@ impl BBSAlgorithm for ZkryptiumImplementation {
         }
     }
 
-    fn verify_bls12381_shake256(&self, pk: &[u8], signature: &[u8], header: &[u8], messages: Vec<Vec<u8>>) -> Result<(), CustomError> {
+    fn verify_bls12381_shake256(pk: &[u8], signature: &[u8], header: &[u8], messages: Vec<Vec<u8>>) -> Result<(), CustomError> {
         let pk = BBSplusPublicKey::from_bytes(pk);
         let signature = BBSplusSignature::from_bytes(signature.try_into().unwrap()).unwrap();
         let messages: Vec<BBSplusMessage> = messages
@@ -90,7 +106,7 @@ impl BBSAlgorithm for ZkryptiumImplementation {
         }
     }
 
-    fn proofgen_bls12381_sha256(&self, pk: &[u8], signature: &[u8], header: &[u8], ph: &[u8], messages: Vec<Vec<u8>>, disclosed_indexes: &[usize]) -> Result<Vec<u8>, CustomError> {
+    fn proofgen_bls12381_sha256(pk: &[u8], signature: &[u8], header: &[u8], ph: &[u8], messages: Vec<Vec<u8>>, disclosed_indexes: &[usize]) -> Result<Vec<u8>, CustomError> {
         let pk = BBSplusPublicKey::from_bytes(pk);
         let signature = BBSplusSignature::from_bytes(signature.try_into().unwrap()).unwrap();
         let messages: Vec<BBSplusMessage> = messages
@@ -101,7 +117,7 @@ impl BBSAlgorithm for ZkryptiumImplementation {
         Ok(proof)
     }
 
-    fn proofgen_bls12381_shake256(&self, pk: &[u8], signature: &[u8], header: &[u8], ph: &[u8], messages: Vec<Vec<u8>>, disclosed_indexes: &[usize]) -> Result<Vec<u8>, CustomError> {
+    fn proofgen_bls12381_shake256(pk: &[u8], signature: &[u8], header: &[u8], ph: &[u8], messages: Vec<Vec<u8>>, disclosed_indexes: &[usize]) -> Result<Vec<u8>, CustomError> {
         let pk = BBSplusPublicKey::from_bytes(pk);
         let signature = BBSplusSignature::from_bytes(signature.try_into().unwrap()).unwrap();
         let messages: Vec<BBSplusMessage> = messages
@@ -112,7 +128,7 @@ impl BBSAlgorithm for ZkryptiumImplementation {
         Ok(proof)
     }
 
-    fn proofverify_bls12381_sha256(&self, pk: &[u8], proof: &[u8], header: &[u8], ph: &[u8], disclosed_messages: Vec<Vec<u8>>, disclosed_indexes: &[usize]) -> Result<(), CustomError> {
+    fn proofverify_bls12381_sha256(pk: &[u8], proof: &[u8], header: &[u8], ph: &[u8], disclosed_messages: Vec<Vec<u8>>, disclosed_indexes: &[usize]) -> Result<(), CustomError> {
         let pk = BBSplusPublicKey::from_bytes(pk);
         let proof = BBSplusPoKSignature::from_bytes(proof.try_into().unwrap());
         let disclosed_messages: Vec<BBSplusMessage> = disclosed_messages
@@ -127,7 +143,7 @@ impl BBSAlgorithm for ZkryptiumImplementation {
 
     }
 
-    fn proofverify_bls12381_shake256(&self, pk: &[u8], proof: &[u8], header: &[u8], ph: &[u8], disclosed_messages: Vec<Vec<u8>>, disclosed_indexes: &[usize]) -> Result<(), CustomError> {
+    fn proofverify_bls12381_shake256(pk: &[u8], proof: &[u8], header: &[u8], ph: &[u8], disclosed_messages: Vec<Vec<u8>>, disclosed_indexes: &[usize]) -> Result<(), CustomError> {
         let pk = BBSplusPublicKey::from_bytes(pk);
         let proof = BBSplusPoKSignature::from_bytes(proof.try_into().unwrap());
         let disclosed_messages: Vec<BBSplusMessage> = disclosed_messages

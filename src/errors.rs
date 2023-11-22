@@ -41,4 +41,7 @@ pub enum CustomError {
 
     #[error("Index out of bounds!")]
     IndexOutOfBounds,
+
+    #[error("A parameter is missing!")]
+    MissingParameter(String),
 }
