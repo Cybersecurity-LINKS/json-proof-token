@@ -35,6 +35,6 @@ pub enum KeyType {
 #[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Copy, Clone)]
 pub enum KeyPairSubtype<B: BBSAlgorithm = ZkryptiumImplementation> {
     BLS12381SHA256(BBSImplementation<B>),
-    BLS12381SHAKE256(B)
+    BLS12381SHAKE256(BBSImplementation<B>)
 }
 
