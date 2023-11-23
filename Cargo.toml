@@ -29,4 +29,3 @@ path = "src/lib.rs"
 [[example]]
 name = "jpt"
 path = "examples/jpt.rs"
-

@@ -93,12 +93,18 @@ fn main() {
     println!("ISSUED JWP: \n{:?}", issued_jwp);
 
 
-    let bbs_jwk = Jwk::generate(KeyPairSubtype::BLS12381SHA256).unwrap();
+    let bbs_jwk = Jwk::generate(KeyPairSubtype::BLS12381SHA256(BBSImplementation::default())).unwrap();
     println!("BBS Jwk: {:?}", bbs_jwk);
     
     let compact_issued_jwp = issued_jwp.encode(SerializationType::COMPACT, &bbs_jwk).unwrap();
     println!("Compact JWP: {}", compact_issued_jwp);
 
+
+    // let mut decoded_issued_jwp = JwpIssued::new(
+    //     BBSImplementation::default(),
+    //     SUImplementation::default(),
+    //     MACImplementation::default()
+    // );
 
     let mut decoded_issued_jwp = JwpIssued::default();
 
@@ -113,6 +119,12 @@ fn main() {
         nonce: Some("wrmBRkKtXjQ".to_owned())
     };
 
+    // let mut presentation_jwp = JwpPresented::new(
+    //     BBSImplementation::default(),
+    //     SUImplementation::default(),
+    //     MACImplementation::default()
+    // );
+
     let mut presentation_jwp = JwpPresented::default();
 
     presentation_jwp.set_issuer_protected_header(decoded_issued_jwp.get_issuer_protected_header().unwrap());
@@ -125,6 +137,13 @@ fn main() {
     let compact_presented_jwp = presentation_jwp.encode(SerializationType::COMPACT, &bbs_jwk.to_public().unwrap(), decoded_issued_jwp.get_proof().unwrap()).unwrap();
 
     println!("Compact Presented JWP: {}", compact_presented_jwp);
+
+
+    // let mut decoded_presentation_jwp = JwpPresented::new(
+    //     BBSImplementation::default(),
+    //     SUImplementation::default(),
+    //     MACImplementation::default()
+    // );
 
     let mut decoded_presentation_jwp = JwpPresented::default();
 

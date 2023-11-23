@@ -54,33 +54,6 @@ pub enum ProofAlgorithm {
 }
 
 
-// pub struct AlgorithmsImplementation {
-//   bbs: Box<dyn BBSAlgorithm>,
-//   su: Box<dyn SUAlgorithm>,
-//   mac: Box<dyn MACAlgorithm>
-// }
-
-// impl Default for AlgorithmsImplementation {
-//     fn default() -> Self {
-//         Self{bbs: Box::new(ZkryptiumImplementation), su: Box::new(SUImplementation), mac: Box::new(MACImplementation)}
-//     }
-// }
-
-// impl AlgorithmsImplementation {
-//   pub fn set_bbs_impl(&mut self, implementation: impl BBSAlgorithm + 'static) {
-//     self.bbs = Box::new(implementation);
-//   }
-
-//   pub fn set_su_impl(&mut self, implementation: impl SUAlgorithm + 'static) {
-//     self.su = Box::new(implementation);
-//   }
-
-//   pub fn set_mac_impl(&mut self, implementation: impl MACAlgorithm + 'static) {
-//     self.mac = Box::new(implementation);
-//   }
-// }
-
-
 impl ProofAlgorithm{
   pub fn bbs_generate_issuer_proof<B: BBSAlgorithm>(&self, payloads: &Payloads, key: &Jwk, issuer_header: &[u8]) -> Result<Vec<u8>, CustomError> {
     let key_params = match &key.key_params {
@@ -100,8 +73,8 @@ impl ProofAlgorithm{
       let sk = base64url_decode(&key_params.d.as_ref().unwrap());
       let messages: Vec<Vec<u8>> = payloads.0.iter().map(|p| serde_json::to_vec(&p.0).unwrap()).collect();
       let proof = match self {
-        Self::BLS12381_SHA256 => B::sign_bls12381_sha256(&sk, &pk, issuer_header, messages),
-        Self::BLS12381_SHAKE256 => B::sign_bls12381_shake256(&sk, &pk, issuer_header, messages),
+        Self::BLS12381_SHA256 => B::sign_bls12381_sha256(&sk, &pk, issuer_header, messages).map_err(|_| CustomError::ProofGenerationError("Signature Failure!".to_string())),
+        Self::BLS12381_SHAKE256 => B::sign_bls12381_shake256(&sk, &pk, issuer_header, messages).map_err(|_| CustomError::ProofGenerationError("Signature Failure!".to_string())),
         _ => unreachable!("This should NOT happen!")
       };
       
@@ -113,11 +86,11 @@ impl ProofAlgorithm{
     let key_params = match &key.key_params {
       JwkAlgorithmParameters::OctetKeyPair(params) => {
           if params.is_public() == false {
-              return Err(CustomError::ProofGenerationError("key is not compatible".to_string()))
+              return Err(CustomError::ProofVerificationError("key is not compatible".to_string()))
           }
           params
       },
-      _ => return Err(CustomError::ProofGenerationError("key is not compatible".to_string()))
+      _ => return Err(CustomError::ProofVerificationError("key is not compatible".to_string()))
     };
   
     if check_alg_curve_compatibility(Algorithm::Proof(self.clone()), key_params.crv.clone()) == false {
@@ -127,10 +100,10 @@ impl ProofAlgorithm{
         let messages: Vec<Vec<u8>> = payloads.0.iter().map(|p| serde_json::to_vec(&p.0).unwrap()).collect();  
         let check = match self {
             Self::BLS12381_SHA256 => {
-              B::verify_bls12381_sha256(&pk, proof, issuer_header, messages)
+              B::verify_bls12381_sha256(&pk, proof, issuer_header, messages).map_err(|_| CustomError::ProofVerificationError("Signature verification Failure!".to_string()))
             },
             Self::BLS12381_SHAKE256 => {
-              B::verify_bls12381_shake256(&pk, proof, issuer_header, messages)
+              B::verify_bls12381_shake256(&pk, proof, issuer_header, messages).map_err(|_| CustomError::ProofVerificationError("Signature verification Failure!".to_string()))
             },
             _ => unreachable!()
         };
@@ -159,10 +132,10 @@ impl ProofAlgorithm{
 
         let proof = match self {
             Self::BLS12381_SHA256_PROOF => {
-              B::proofgen_bls12381_sha256(&pk, signature, issuer_header, presentation_header, messages, &revealed_message_indexes)
+              B::proofgen_bls12381_sha256(&pk, signature, issuer_header, presentation_header, messages, &revealed_message_indexes).map_err(|_| CustomError::ProofGenerationError("Proof generation Failure!".to_string()))
             },
             Self::BLS12381_SHAKE256_PROOF => {
-              B::proofgen_bls12381_shake256(&pk, signature, issuer_header, presentation_header, messages, &revealed_message_indexes)
+              B::proofgen_bls12381_shake256(&pk, signature, issuer_header, presentation_header, messages, &revealed_message_indexes).map_err(|_| CustomError::ProofGenerationError("Proof generation Failure!".to_string()))
             },
             _ => unreachable!()
         };
@@ -175,11 +148,11 @@ impl ProofAlgorithm{
     let key_params = match &key.key_params {
         JwkAlgorithmParameters::OctetKeyPair(params) => {
             if params.is_public() == false {
-                return Err(CustomError::ProofGenerationError("key is not compatible".to_string()))
+                return Err(CustomError::ProofVerificationError("key is not compatible".to_string()))
             }
             params
         },
-        _ => return Err(CustomError::ProofGenerationError("key is not compatible".to_string()))
+        _ => return Err(CustomError::ProofVerificationError("key is not compatible".to_string()))
     };
     
     if check_alg_curve_compatibility(Algorithm::Proof(self.clone()), key_params.crv.clone()) == false {
@@ -191,10 +164,10 @@ impl ProofAlgorithm{
 
         let check = match self {
             Self::BLS12381_SHA256_PROOF => {
-              B::proofverify_bls12381_sha256(&pk, proof, issuer_header, presentation_header, disclosed_messages, &disclosed_indexes)
+              B::proofverify_bls12381_sha256(&pk, proof, issuer_header, presentation_header, disclosed_messages, &disclosed_indexes).map_err(|_| CustomError::ProofVerificationError("Proof verification Failure!".to_string()))
             },
             Self::BLS12381_SHAKE256_PROOF => {
-              B::proofverify_bls12381_sha256(&pk, proof, issuer_header, presentation_header, disclosed_messages, &disclosed_indexes)
+              B::proofverify_bls12381_sha256(&pk, proof, issuer_header, presentation_header, disclosed_messages, &disclosed_indexes).map_err(|_| CustomError::ProofVerificationError("Proof verification Failure!".to_string()))
             },
             _ => unreachable!()
         };

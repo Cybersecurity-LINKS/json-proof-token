@@ -17,6 +17,8 @@
 
 use serde::{Serialize, Deserialize};
 
+use crate::jpa::bbs::{BBSAlgorithm, ZkryptiumImplementation, BBSImplementation};
+
 
 #[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Copy, Clone)]
 pub enum KeyType {
@@ -31,8 +33,8 @@ pub enum KeyType {
 }
 
 #[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Copy, Clone)]
-pub enum KeyPairSubtype {
-    BLS12381SHA256,
-    BLS12381SHAKE256
+pub enum KeyPairSubtype<B: BBSAlgorithm = ZkryptiumImplementation> {
+    BLS12381SHA256(BBSImplementation<B>),
+    BLS12381SHAKE256(B)
 }
 

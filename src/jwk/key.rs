@@ -14,7 +14,7 @@
 
 
 
-use crate::{jwk::alg_parameters::JwkOctetKeyPairParameters, encoding::{base64url_encode, base64url_decode}, errors::CustomError};
+use crate::{jwk::alg_parameters::JwkOctetKeyPairParameters, encoding::{base64url_encode, base64url_decode}, errors::CustomError, jpa::bbs::BBSAlgorithm};
 use serde::{Deserialize, Serialize};
 use zkryptium::{schemes::algorithms::{BBS_BLS12381_SHA256, BBS_BLS12381_SHAKE256}, keys::pair::KeyPair};
 
@@ -67,20 +67,16 @@ pub struct Jwk {
 
 impl Jwk {
 
-    pub fn generate(key_type: KeyPairSubtype) -> Result<Self, CustomError>{
+    pub fn generate<B: BBSAlgorithm>(key_type: KeyPairSubtype<B>) -> Result<Self, CustomError>{
         match key_type {
-            KeyPairSubtype::BLS12381SHA256 => {
-                let keypair = KeyPair::<BBS_BLS12381_SHA256>::generate(None, None);
-                let pk = keypair.public_key().to_bytes();
-                let sk = keypair.private_key().to_bytes();
+            KeyPairSubtype::BLS12381SHA256(_) => {
+                let (sk, pk) = B::keygen_sha256().map_err(|_| CustomError::JwkGenerationError("failed to generate BBS key!".into()))?;
                 let okp_params = JwkOctetKeyPairParameters::new(super::curves::EllipticCurveTypes::Bls12381G2, pk.to_vec(), Some(sk.to_vec()));
                 let jwk_params = JwkAlgorithmParameters::OctetKeyPair(okp_params);
                 Ok(Self{kid: None, pk_use: None, key_ops: None, alg: None, x5u: None, x5c: None, x5t: None, key_params: jwk_params })
             },
-            KeyPairSubtype::BLS12381SHAKE256 => {
-                let keypair = KeyPair::<BBS_BLS12381_SHAKE256>::generate(None, None);
-                let pk = keypair.public_key().to_bytes();
-                let sk = keypair.private_key().to_bytes();
+            KeyPairSubtype::BLS12381SHAKE256(_) => {
+                let (sk, pk) = B::keygen_shake256().map_err(|_| CustomError::JwkGenerationError("failed to generate BBS key!".into()))?;
                 let okp_params = JwkOctetKeyPairParameters::new(super::curves::EllipticCurveTypes::Bls12381G2, pk.to_vec(), Some(sk.to_vec()));
                 let jwk_params = JwkAlgorithmParameters::OctetKeyPair(okp_params);
                 Ok(Self{kid: None, pk_use: None, key_ops: None, alg: None, x5u: None, x5c: None, x5t: None, key_params: jwk_params })
