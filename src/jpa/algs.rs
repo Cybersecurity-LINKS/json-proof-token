@@ -14,7 +14,7 @@
 
 
 
-use std::fmt;
+use std::{fmt, str::FromStr};
 
 use serde::{Deserialize, Serialize};
 
@@ -54,22 +54,43 @@ pub enum ProofAlgorithm {
 impl fmt::Display for ProofAlgorithm {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
       let variant_str = match self {
-          ProofAlgorithm::BLS12381_SHA256 => "BLS12381_SHA256",
-          ProofAlgorithm::BLS12381_SHAKE256 => "BLS12381_SHAKE256",
-          ProofAlgorithm::BLS12381_SHA256_PROOF => "BLS12381_SHA256_PROOF",
-          ProofAlgorithm::BLS12381_SHAKE256_PROOF => "BLS12381_SHAKE256_PROOF",
-          ProofAlgorithm::SU_ES256 => "SU_ES256",
-          ProofAlgorithm::MAC_H256 => "MAC_H256",
-          ProofAlgorithm::MAC_H384 => "MAC_H384",
-          ProofAlgorithm::MAC_H512 => "MAC_H512",
-          ProofAlgorithm::MAC_K25519 => "MAC_K25519",
-          ProofAlgorithm::MAC_K448 => "MAC_K448",
-          ProofAlgorithm::MAC_H256K => "MAC_H256K",
+          ProofAlgorithm::BLS12381_SHA256 => "BBS-BLS12381-SHA256",
+          ProofAlgorithm::BLS12381_SHAKE256 => "BBS-BLS12381-SHAKE256",
+          ProofAlgorithm::BLS12381_SHA256_PROOF => "BBS-BLS12381-SHA256-PROOF",
+          ProofAlgorithm::BLS12381_SHAKE256_PROOF => "BBS-BLS12381-SHAKE256-PROOF",
+          ProofAlgorithm::SU_ES256 => "SU-ES256",
+          ProofAlgorithm::MAC_H256 => "MAC-H256",
+          ProofAlgorithm::MAC_H384 => "MAC-H384",
+          ProofAlgorithm::MAC_H512 => "MAC-H512",
+          ProofAlgorithm::MAC_K25519 => "MAC-K25519",
+          ProofAlgorithm::MAC_K448 => "MAC-K448",
+          ProofAlgorithm::MAC_H256K => "MAC-H256K",
       };
       write!(f, "{}", variant_str)
   }
 }
 
+
+impl FromStr for ProofAlgorithm {
+  type Err = &'static str;
+
+  fn from_str(s: &str) -> Result<Self, Self::Err> {
+      match s {
+          "BBS-BLS12381-SHA256" => Ok(ProofAlgorithm::BLS12381_SHA256),
+          "BBS-BLS12381-SHAKE256" => Ok(ProofAlgorithm::BLS12381_SHAKE256),
+          "BBS-BLS12381-SHA256-PROOF" => Ok(ProofAlgorithm::BLS12381_SHA256_PROOF),
+          "BBS-BLS12381-SHAKE256-PROOF" => Ok(ProofAlgorithm::BLS12381_SHAKE256_PROOF),
+          "SU-ES256" => Ok(ProofAlgorithm::SU_ES256),
+          "MAC-H256" => Ok(ProofAlgorithm::MAC_H256),
+          "MAC-H384" => Ok(ProofAlgorithm::MAC_H384),
+          "MAC-H512" => Ok(ProofAlgorithm::MAC_H512),
+          "MAC-K25519" => Ok(ProofAlgorithm::MAC_K25519),
+          "MAC-K448" => Ok(ProofAlgorithm::MAC_K448),
+          "MAC-H256K" => Ok(ProofAlgorithm::MAC_H256K),
+          _ => Err("Invalid proof algorithm"),
+      }
+  }
+}
 
 
 
