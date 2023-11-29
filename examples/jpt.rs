@@ -59,6 +59,7 @@ fn main() {
     // jpt_claims.add_claim("given_name", "Jay");
     // jpt_claims.add_claim("email", "jaydoe@example.org");
     // jpt_claims.add_claim("age", 42);
+    jpt_claims.set_iss("https://issuer.example".to_owned());
     jpt_claims.add_claim("", custom_claims, true);
 
     
@@ -72,7 +73,6 @@ fn main() {
     let issued_header = IssuerProtectedHeader{
         typ: Some("JPT".to_owned()),
         alg: ProofAlgorithm::BLS12381_SHA256,
-        iss: Some("https://issuer.example".to_owned()),
         cid: None,
         claims: Some(claims),
     };

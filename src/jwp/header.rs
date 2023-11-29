@@ -26,9 +26,6 @@ pub struct IssuerProtectedHeader {
     pub typ: Option<String>,
     /// Algorithm used for the JWP
     pub alg: ProofAlgorithm,
-    /// Who issued the JWP
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub iss: Option<String>,
     /// cid can be used similar to a kid in order to ensure externally resolve of claims
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cid: Option<String>,

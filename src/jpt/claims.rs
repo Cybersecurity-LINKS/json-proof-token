@@ -32,10 +32,11 @@ pub struct Claims (pub Vec<String>);
 #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
 pub struct JptClaims {
 
-    /// Apparently the "iss" that in JWT was a claim, now should be an issuer protected header parameter 
     /** Apparently the "aud" that in JWT was a claim, now should be an presentation protected header parameter 
       * (https://datatracker.ietf.org/doc/html/draft-ietf-jose-json-web-proof#name-presentation-protected-head) **/
-    
+    /// Who issued the JWP
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub iss: Option<String>,
     /// Subject of the JPT.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sub: Option<String>,
@@ -62,13 +63,18 @@ pub struct JptClaims {
 impl JptClaims {
 
     pub fn new() -> Self {
-        Self { 
+        Self {
+            iss: None,
             sub: None,
             exp: None, 
             nbf: None, 
             iat: None, 
             jti: None, 
             custom: IndexMap::new() }
+    }
+
+    pub fn set_iss(&mut self, value: String) {
+        self.iss = Some(value);
     }
 
     pub fn set_sub(&mut self, value: String) {
