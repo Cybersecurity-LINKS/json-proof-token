@@ -73,6 +73,7 @@ fn main() {
     let issued_header = IssuerProtectedHeader{
         typ: Some("JPT".to_owned()),
         alg: ProofAlgorithm::BLS12381_SHA256,
+        kid: None,
         cid: None,
         claims: Some(claims),
     };
@@ -96,6 +97,7 @@ fn main() {
 
     let presentation_header = PresentationProtectedHeader{
         alg: ProofAlgorithm::BLS12381_SHA256_PROOF,
+        kid: None,
         aud: Some("https://recipient.example.com".to_owned()),
         nonce: Some("wrmBRkKtXjQ".to_owned())
     };
