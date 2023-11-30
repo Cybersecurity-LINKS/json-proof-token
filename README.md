@@ -130,12 +130,15 @@ Add this to your Cargo.toml:
 
 ```
 [dependencies]
-json-proof-token = "0.1.7"
+json-proof-token = "0.1.8"
 ```
 
 ### Example
 Take a look at the [examples](https://github.com/Cybersecurity-LINKS/json-proof-token/tree/main/examples).
 
+## Decoder
+
+[Here](https://github.com/Cybersecurity-LINKS/json-proof-token/tree/main/decoder) you can find a simple decoder for JSON Proof Tokens.
 
 ## Tests
 

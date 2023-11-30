@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JPT Decoder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+        }
+        pre {
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>JPT Decoder</h1>
+    <label for="jptInput">Enter JPT:</label>
+    <textarea id="jptInput" placeholder="Paste your JPT here..."></textarea>
+    <button onclick="decodeJPT()">Decode JPT</button>
+
+    <h2>Decoded Result:</h2>
+    <div id="decodedResult">
+        <section id="issuerHeaderSection">
+            <h3>Issuer Protected Header:</h3>
+            <pre id="decodedIssuerHeader"></pre>
+        </section>
+		<section id="presentationProtectedHeaderSection">
+            <h3>Presentation Protected Header:</h3>
+            <pre id="decodedPresentationProtectedHeader"></pre>
+        </section>
+        <section id="payloadsSection">
+            <h3>Payloads:</h3>
+            <pre id="decodedPayloads"></pre>
+        </section>
+        <section id="proofSection">
+            <h3>Proof (encoded):</h3>
+            <pre id="encodedProof"></pre>
+        </section>
+    </div>
+
+    <script>
+        function decodeJPT() {
+            const jptInput = document.getElementById('jptInput').value.trim();
+
+            try {
+				const [issuer_header, ...restSections] = jptInput.split('.');
+				
+				
+				let decodedPresentationProtectedHeader = '';
+                let encodedPayloads;
+                let proof;
+				console.log(restSections);
+
+                if (restSections.length === 2) {
+                    [encodedPayloads, proof] = restSections;
+                } else if (restSections.length === 3) {
+                    [presentation_header, encodedPayloads, proof] = restSections;
+					decodedPresentationProtectedHeader = JSON.stringify(JSON.parse(atob(presentation_header)), null, 2);
+                }
+
+
+				const decodedIssuerHeader = JSON.stringify(JSON.parse(atob(issuer_header)), null, 2);
+                
+                
+                const payloads = encodedPayloads.split('~').map((payload, index) => {
+                    try {
+                        const indent = '    '; 
+                        const indentedPayload = JSON.stringify(JSON.parse(atob(payload)), null, 2).split('\n').join(`\n${indent}`);
+                        return `${indent}${indentedPayload}`;
+                    } catch (error) {
+                        return '    Null';
+                    }
+                });
+
+                document.getElementById('decodedIssuerHeader').textContent = decodedIssuerHeader;
+				document.getElementById('decodedPresentationProtectedHeader').textContent = decodedPresentationProtectedHeader;
+                document.getElementById('decodedPayloads').textContent = '[\n' + payloads.join(',\n') + '\n]';
+                document.getElementById('encodedProof').textContent = proof;
+            } catch (error) {
+				console.log(error);
+                document.getElementById('decodedIssuerHeader').textContent = 'Invalid JWT';
+				document.getElementById('decodedPresentationProtectedHeader').textContent = '';
+                document.getElementById('decodedPayloads').textContent = '';
+                document.getElementById('encodedProof').textContent = '';
+            }
+        }
+    </script>
+</body>
+</html>
