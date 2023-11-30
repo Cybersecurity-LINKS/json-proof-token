@@ -21,6 +21,7 @@ use crate::{jpa::algs::ProofAlgorithm, encoding::base64url_encode};
 use super::{types::KeyType, curves::EllipticCurveTypes};
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
+#[serde(untagged)]
 pub enum Algorithm {
     Proof(ProofAlgorithm),
 
