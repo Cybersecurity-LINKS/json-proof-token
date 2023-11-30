@@ -63,7 +63,7 @@ impl JwpPresented {
     pub fn decode(encoded_jwp: String, serialization: SerializationType, key: &Jwk) -> Result<Self, CustomError> {
         match serialization {
             SerializationType::COMPACT => {
-                let (encoded_presentation_protected_header, encoded_issuer_protected_header, encoded_payloads, encoded_proof) = expect_four!(encoded_jwp.splitn(4, '.'));
+                let (encoded_issuer_protected_header, encoded_presentation_protected_header, encoded_payloads, encoded_proof) = expect_four!(encoded_jwp.splitn(4, '.'));
                 //TODO: this needs to be checked because doesn't return an error if the value is not deserializable into an IssuerProtectedHeader struct
                 let presentation_protected_header: PresentationProtectedHeader = Base64UrlDecodedSerializable::from_serializable_values(encoded_presentation_protected_header).deserialize::<PresentationProtectedHeader>();
                 let issuer_protected_header: IssuerProtectedHeader = Base64UrlDecodedSerializable::from_serializable_values(encoded_issuer_protected_header).deserialize::<IssuerProtectedHeader>();
@@ -172,7 +172,7 @@ impl JwpPresented {
 
                 
 
-                format!("{}.{}.{}.{}", encoded_presentation_header, encoded_issuer_header, encoded_payloads, proof)
+                format!("{}.{}.{}.{}", encoded_issuer_header, encoded_presentation_header, encoded_payloads, proof)
                 
             },
             SerializationType::JSON => todo!(),
