@@ -40,6 +40,7 @@ impl fmt::Display for Algorithm {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(untagged)]
 pub enum JwkAlgorithmParameters {
     // TODO: to be done
     
