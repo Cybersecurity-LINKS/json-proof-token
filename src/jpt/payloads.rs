@@ -40,6 +40,10 @@ impl Payloads {
         Payloads(payloads)
     }
 
+    pub fn get_values(&self) -> Vec<Value>{
+        self.0.clone().into_iter().map(|v| v.0).collect()
+    }
+
     pub fn get_undisclosed_indexes(&self) -> Vec<usize> {
         let mut undisclosed_indexes = Vec::new();
 

@@ -45,22 +45,34 @@ fn main() {
     
    
 
+    // let custom_claims = serde_json::json!({
+    //     "family_name": "Doe",
+    //     "given_name": "Jay",
+    //     "email": "jaydoe@example.org",
+    //     "age": 42
+    // });
+
     let custom_claims = serde_json::json!({
-        "family_name": "Doe",
-        "given_name": "Jay",
-        "email": "jaydoe@example.org",
-        "age": 42
+        "degree": {
+            "type": "BachelorDegree",
+            "name": "Bachelor of Science and Arts",
+            "ciao": [
+                {"u1": "value1"}, 
+                {"u2": "value2"}
+                ]
+            },
+        "name": "John Doe"
     });
 
 
 
     let mut jpt_claims = JptClaims::new();
-    // jpt_claims.add_claim("family_name", "Doe");
-    // jpt_claims.add_claim("given_name", "Jay");
-    // jpt_claims.add_claim("email", "jaydoe@example.org");
-    // jpt_claims.add_claim("age", 42);
+    // jpt_claims.set_claim(Some("family_name"), "Doe");
+    // jpt_claims.set_claim(Some("given_name"), "Jay");
+    // jpt_claims.set_claim(Some("email"), "jaydoe@example.org");
+    // jpt_claims.set_claim(Some("age"), 42);
     jpt_claims.set_iss("https://issuer.example".to_owned());
-    jpt_claims.add_claim("", custom_claims, true);
+    jpt_claims.set_claim(None, custom_claims, true);
 
     
     println!("{:?}", jpt_claims);

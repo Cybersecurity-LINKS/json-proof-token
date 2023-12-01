@@ -14,9 +14,11 @@
 
 
 
+use std::iter::zip;
+
 use indexmap::IndexMap;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde::{Deserialize, Serialize, Serializer};
+use serde_json::{Value, value::Index, json};
 
 
 use crate::flattening::json_value_flattening;
@@ -59,7 +61,6 @@ pub struct JptClaims {
     pub custom: IndexMap<String, Value>
 }
 
-
 impl JptClaims {
 
     pub fn new() -> Self {
@@ -97,40 +98,44 @@ impl JptClaims {
         self.jti = Some(value);
     }
 
-    pub fn add_claim<T: Serialize>(&mut self, claim: &str, value: T, flattened: bool) {
+    pub fn set_claim<T: Serialize>(&mut self, claim: Option<&str>, value: T, flattened: bool) {
+
         let serde_value = serde_json::to_value(value).unwrap();
-        if flattened {
-            self.custom.extend(json_value_flattening(serde_value));
-            // json_value_flattening(serde_value).iter().for_each(|(k, v)| self.custom.insert(k, v))
+        if !serde_value.is_object() {
+            self.custom.insert(claim.unwrap_or("").to_string(), serde_value);
+
         } else {
-            self.custom.insert(claim.to_owned(), serde_value);
-        }
+            if flattened {
+                let v = match claim {
+                    Some(c) => json!({c: serde_value}),
+                    None => serde_value,
+                };
+                self.custom.extend(json_value_flattening(v));
+            } else {
+                self.custom.insert(claim.unwrap_or("").to_string(), serde_value);
+            }
+        };
         
     }
 
+
     /// Extracts claims and payloads into separate vectors.
     pub fn get_claims_and_payloads(&self) -> (Claims, Payloads){
-
         let jptclaims_json_value = serde_json::to_value(self).unwrap();
-        let claim_payloads_pairs = json_value_flattening(jptclaims_json_value);     
-        // let flattened = Flattener::new()
-        // .set_key_separator(".")
-        // .set_array_formatting(ArrayFormatting::Surrounded {
-        //     start: "[".to_string(),
-        //     end: "]".to_string()
-        // })
-        // .set_preserve_empty_arrays(false)
-        // .set_preserve_empty_objects(false)
-        // .flatten(&jptclaims_json_value).unwrap();
-
-        // println!("flattened: {}", flattened);
-
+        let claims_payloads_pairs = jptclaims_json_value.as_object().unwrap().to_owned();
         
-        // let claim_payload_pairs: IndexMap<String, Value> = serde_json::from_value::<IndexMap<String, Value>>(flattened.clone()).unwrap();
-
-        let (keys, values): (Vec<String>, Vec<Value>) = claim_payloads_pairs.into_iter().unzip();
+        let (keys, values): (Vec<String>, Vec<Value>) = claims_payloads_pairs.to_owned().into_iter().unzip();
 
         (Claims(keys), Payloads::new_from_values(values))
+        
+    }
+
+
+    pub fn from_claims_and_payloads(claims: Claims, payloads: Payloads) {
+        let zip: Vec<(String, Value)> = zip(claims.0, payloads.get_values()).collect();
+
+        //TODO: continue from this
+        todo!()
         
     }
 
