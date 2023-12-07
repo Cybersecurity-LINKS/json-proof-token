@@ -29,9 +29,9 @@ pub struct IssuerProtectedHeader {
     /// ID for the key used for the JWP.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub kid: Option<String>,
-    /// cid can be used similar to a cid in order to ensure externally resolve of claims
+    /// cid can be used similar to a cid in order to ensure externally resolve of claims. FOr now this is not handled!
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub cid: Option<String>,
+    pub cid: Option<String>, 
     /// if you want you can put the claims directly into the header
     #[serde(skip_serializing_if = "Option::is_none")]
     pub claims: Option<Claims>

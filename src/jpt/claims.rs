@@ -17,16 +17,23 @@
 use std::iter::zip;
 
 use indexmap::IndexMap;
-use serde::{Deserialize, Serialize, Serializer};
-use serde_json::{Value, value::Index, json};
+use json_unflattening::{flattening::flatten, unflattening::unflatten};
+use serde::{Deserialize, Serialize};
+use serde_json::{Value, json, Map, value::Index};
 
-
-use crate::flattening::json_value_flattening;
 
 use super::payloads::Payloads;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Claims (pub Vec<String>);
+
+
+#[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
+pub struct CustomValue {
+    value: Value,
+    #[serde(skip_serializing)]
+    flattening: bool
+}
 
 /** These claims are taken from the JWT RFC (https://tools.ietf.org/html/rfc7519) 
  * making the hypothesis that in the future will be used also for the JPTs **/
@@ -54,9 +61,7 @@ pub struct JptClaims {
     /// Unique ID for the JPT.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub jti: Option<String>,
-    // Other claims (age, name, surname, ...)
-    // #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    // pub custom: Option<Value>
+    /// Other custom claims (age, name, surname, Verifiable Credential, ...)
     #[serde(flatten)]
     pub custom: IndexMap<String, Value>
 }
@@ -110,7 +115,7 @@ impl JptClaims {
                     Some(c) => json!({c: serde_value}),
                     None => serde_value,
                 };
-                self.custom.extend(json_value_flattening(v));
+                self.custom.extend(flatten(&v).unwrap());
             } else {
                 self.custom.insert(claim.unwrap_or("").to_string(), serde_value);
             }
@@ -119,9 +124,16 @@ impl JptClaims {
     }
 
 
+    pub fn get_claim(&self, claim: &str) -> Option<&Value> {
+        self.custom.get(claim)
+    }
+
+
     /// Extracts claims and payloads into separate vectors.
     pub fn get_claims_and_payloads(&self) -> (Claims, Payloads){
+
         let jptclaims_json_value = serde_json::to_value(self).unwrap();
+
         let claims_payloads_pairs = jptclaims_json_value.as_object().unwrap().to_owned();
         
         let (keys, values): (Vec<String>, Vec<Value>) = claims_payloads_pairs.to_owned().into_iter().unzip();
@@ -131,41 +143,14 @@ impl JptClaims {
     }
 
 
-    pub fn from_claims_and_payloads(claims: Claims, payloads: Payloads) {
-        let zip: Vec<(String, Value)> = zip(claims.0, payloads.get_values()).collect();
+    /// Reconstruct JptClaims from Claims and Payloads
+    pub fn from_claims_and_payloads(claims: &Claims, payloads: &Payloads) -> Self {
+        let zip: Map<String, Value> = zip(claims.0.clone(), payloads.get_values()).collect();
+        let unflat = unflatten(&zip).unwrap();
+        let jpt_claims: Self = serde_json::from_value(unflat).unwrap();
 
-        //TODO: continue from this
-        todo!()
+        jpt_claims
         
     }
-
-
-    // pub fn from_attributes(attributes: BTreeMap<String, String>) -> Result<JptClaims, serde_json::Error> {
-    //     let mut claims = JptClaims::default();
-
-    //     for (key, value) in attributes {
-    //         match key.as_str() {
-    //             "sub" => claims.sub = Some(value),
-    //             "exp" => claims.exp = Some(value.parse::<i64>().unwrap_or(0)), // Handle parsing errors
-    //             "nbf" => claims.nbf = Some(value.parse::<i64>().unwrap_or(0)), // Handle parsing errors
-    //             "iat" => claims.iat = Some(value.parse::<i64>().unwrap_or(0)), // Handle parsing errors
-    //             "jti" => claims.jti = Some(value),
-    //             _ => {
-    //                 // Parse custom claims as JSON strings
-    //                 if claims.custom.is_none() {
-    //                     claims.custom = Some(Value::Object(Default::default()));
-    //                 }
-
-    //                 if let Some(custom) = claims.custom.as_mut() {
-    //                     if let Value::Object(custom_object) = custom {
-    //                         custom_object.insert(key, serde_json::from_str(&value)?);
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    //     Ok(claims)
-    // }
   
 }

@@ -75,13 +75,19 @@ impl JwpPresented {
                     }
                 }).collect());
 
+                if !match &issuer_protected_header.claims {
+                    Some(claims) => claims.0.len() == payloads.0.len(),
+                    None => payloads.0.len() == 0,
+                } {
+                    return Err(CustomError::InvalidIssuedJwp);
+                }
+
                 let proof = base64url_decode(encoded_proof);
                 let issuer_header_oct = serde_json::to_vec(&issuer_protected_header).unwrap();
                 let presentation_header_oct = serde_json::to_vec(&presentation_protected_header).unwrap();
 
                 match Self::verify_proof(presentation_protected_header.alg, key, &proof, &presentation_header_oct, &issuer_header_oct, &payloads) {
                     Ok(_) => {
-                        println!("Presented Proof Valid!!!!");
                         Ok(Self{issuer_protected_header, payloads, proof: Some(proof), presentation_protected_header})
                     },
                     Err(e) => Err(e),

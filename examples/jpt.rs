@@ -19,7 +19,7 @@ use std::collections::HashMap;
 
 use jsonprooftoken::{jpt::claims::JptClaims, jwp::{header::{IssuerProtectedHeader, PresentationProtectedHeader}, issued::JwpIssued, presented::JwpPresented}, jpa::algs::ProofAlgorithm, encoding::{base64url_encode, SerializationType}, jwk::{key::Jwk, types::KeyPairSubtype, alg_parameters::JwkAlgorithmParameters}};
 use serde::Serialize;
-use serde_json::Value;
+use serde_json::{Value, json};
 
 
 fn main() {
@@ -66,20 +66,37 @@ fn main() {
 
 
 
+
     let mut jpt_claims = JptClaims::new();
     // jpt_claims.set_claim(Some("family_name"), "Doe");
     // jpt_claims.set_claim(Some("given_name"), "Jay");
     // jpt_claims.set_claim(Some("email"), "jaydoe@example.org");
     // jpt_claims.set_claim(Some("age"), 42);
     jpt_claims.set_iss("https://issuer.example".to_owned());
-    jpt_claims.set_claim(None, custom_claims, true);
+    jpt_claims.set_claim(Some("vc"), custom_claims, true);
+    jpt_claims.set_claim(Some("test"), json!({
+        "a": "b",
+        "c": 1,
+        "d": {
+            "f": "g"
+        }
+    }), false);
 
     
-    println!("{:?}", jpt_claims);
+    println!("JptClaims: {:#?}", jpt_claims);
     let (claims, payloads) = jpt_claims.get_claims_and_payloads();
 
     println!("Claims: {:?}", claims);
     println!("Payloads: {:?}", payloads);
+
+
+    let original_jpt_claims = JptClaims::from_claims_and_payloads(&claims, &payloads);
+    println!("Original JptClaims: {:#?}", original_jpt_claims);
+    let (claims2, payload2) = jpt_claims.get_claims_and_payloads();
+
+    assert_eq!(claims,claims2);
+    assert_eq!(payloads, payload2);
+
 
 
     let issued_header = IssuerProtectedHeader{
@@ -115,10 +132,6 @@ fn main() {
     };
 
     
-    // This is an alternative
-    // let presentation_jwp = decoded_issued_jwp.present(SerializationType::COMPACT, &bbs_jwk.to_public().unwrap(), presentation_header);
-    
-    
     let mut presentation_jwp = JwpPresented::new(decoded_issued_jwp.get_issuer_protected_header().clone(),presentation_header, decoded_issued_jwp.get_payloads().clone());
     presentation_jwp.set_disclosed(1, false).unwrap();
     presentation_jwp.set_disclosed(3, false).unwrap();
@@ -129,21 +142,4 @@ fn main() {
 
     let decoded_presentation_jwp = JwpPresented::decode(compact_presented_jwp, SerializationType::COMPACT, &bbs_jwk.to_public().unwrap()).unwrap();
     println!("DECODED PRESENTED JWP \n{:?}", decoded_presentation_jwp);
-
-
-
-    
-
-    // let original = JptClaims::reconstruct_json_value(claims);
-    // println!("{:?}", original);
-    
-
-    // let claims_map = jpt_claims.to_map();
-    // println!("{:?}", claims_map);
-
-
-    // let deserialized = JptClaims::from_map(claims_map);
-
-    // println!("{:?}", jpt_claims);
-    // println!("{:?}", deserialized);
 }

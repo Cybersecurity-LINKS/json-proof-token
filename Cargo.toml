@@ -13,12 +13,12 @@ rust-version = "1.65"
 [dependencies]
 serde = { version = "1.0.25", default_feature = false, features = ["derive", "serde_derive"] }
 serde_json = {version = "1.0.59", features = ["preserve_order"]}
-flatten-json-object = "0.6.1"
 data-encoding = "2.4.0"
 indexmap = {version = "2.0.2", features = ["serde"]}
 thiserror = "1.0.30"
-zkryptium = {version = "0.1.5", default-features = false, features = ["bbsplus"]}
+zkryptium = {version = "0.1.7", default-features = false, features = ["bbsplus"]}
 cargo-license = "0.5.1"
+json-unflattening = "0.1.2"
 
 [lib]
 name = "jsonprooftoken"

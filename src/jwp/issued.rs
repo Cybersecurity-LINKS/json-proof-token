@@ -76,12 +76,18 @@ impl JwpIssued {
                     }
                 }).collect());
 
+                if !match &issuer_protected_header.claims {
+                    Some(claims) => claims.0.len() == payloads.0.len(),
+                    None => payloads.0.len() == 0,
+                } {
+                    return Err(CustomError::InvalidIssuedJwp);
+                }
+
                 let proof = base64url_decode(encoded_proof);
                 let issuer_header_oct = serde_json::to_vec(&issuer_protected_header).unwrap();
 
                 match Self::verify_proof(issuer_protected_header.alg, key, &proof, &issuer_header_oct, &payloads) {
                     Ok(_) => {
-                        println!("Issued Proof Valid!!!!");
                         Ok(Self{issuer_protected_header, payloads, proof: Some(proof)})
                     },
                     Err(e) => Err(e),
