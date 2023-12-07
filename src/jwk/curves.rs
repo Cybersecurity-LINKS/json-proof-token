@@ -15,7 +15,7 @@
 
 
 
-use std::fmt;
+use std::{fmt, str::FromStr};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
@@ -36,6 +36,25 @@ pub enum EllipticCurveTypes {
     #[serde(rename = "Bls12381G2")]
     Bls12381G2
 
+}
+
+impl FromStr for EllipticCurveTypes {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "P-256" => Ok(EllipticCurveTypes::P256),
+            "P-384" => Ok(EllipticCurveTypes::P384),
+            "P-521" => Ok(EllipticCurveTypes::P521),
+            "Ed25519" => Ok(EllipticCurveTypes::Ed25519),
+            "Ed448" => Ok(EllipticCurveTypes::Ed448),
+            "X25519" => Ok(EllipticCurveTypes::X25519),
+            "X448" => Ok(EllipticCurveTypes::X448),
+            "secp256k1" => Ok(EllipticCurveTypes::Secp256K1),
+            "Bls12381G2" => Ok(EllipticCurveTypes::Bls12381G2),
+            _ => Err(()),
+        }
+    }
 }
 
 
