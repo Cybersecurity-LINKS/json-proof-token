@@ -60,7 +60,7 @@ impl JwpIssued {
         Ok(jwp)
     }
 
-    pub fn decode(encoded_jwp: String, serialization: SerializationType, key: &Jwk) -> Result<Self, CustomError>{
+    pub fn decode(encoded_jwp: String, serialization: SerializationType) -> Result<Self, CustomError> {
         match serialization {
             SerializationType::COMPACT => {
                 let (encoded_issuer_protected_header, encoded_payloads, encoded_proof) = expect_three!(encoded_jwp.splitn(3, '.')); 
@@ -84,19 +84,22 @@ impl JwpIssued {
                 }
 
                 let proof = base64url_decode(encoded_proof);
-                let issuer_header_oct = serde_json::to_vec(&issuer_protected_header).unwrap();
-
-                match Self::verify_proof(issuer_protected_header.alg, key, &proof, &issuer_header_oct, &payloads) {
-                    Ok(_) => {
-                        Ok(Self{issuer_protected_header, payloads, proof: Some(proof)})
-                    },
-                    Err(e) => Err(e),
-                }            
+                Ok(Self{issuer_protected_header, payloads, proof: Some(proof)})          
             },
             SerializationType::JSON => todo!()
         }
-        
-        // Base64UrlDecodedSerializable::deserialize(&'a self)
+    }
+
+    pub fn verify(&self, key: &Jwk) ->Result<(), CustomError> {
+        let issuer_header_oct = serde_json::to_vec(&self.issuer_protected_header).unwrap();
+        let proof = self.proof.as_ref().ok_or(CustomError::InvalidIssuedProof)?;
+        Self::verify_proof(self.issuer_protected_header.alg, key, proof, &issuer_header_oct, &self.payloads)  
+    }
+
+    pub fn decode_and_verify(encoded_jwp: String, serialization: SerializationType, key: &Jwk) -> Result<Self, CustomError> {
+        let jwp = Self::decode(encoded_jwp, serialization)?;
+        jwp.verify(key)?;
+        Ok(jwp)
     }
 
 

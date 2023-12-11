@@ -40,7 +40,7 @@ pub struct JwpPresented {
 }
 
 impl JwpPresented {
-
+    //TODO: get in input a JwpIssued directly
     pub fn new(issuer_protected_header: IssuerProtectedHeader, presentation_protected_header: PresentationProtectedHeader, payloads: Payloads) -> Self {
         Self { issuer_protected_header, presentation_protected_header, payloads, proof: None}
     }
@@ -59,8 +59,7 @@ impl JwpPresented {
         Ok(jwp)
     }
 
-
-    pub fn decode(encoded_jwp: String, serialization: SerializationType, key: &Jwk) -> Result<Self, CustomError> {
+    pub fn decode(encoded_jwp: String, serialization: SerializationType) -> Result<Self, CustomError> {
         match serialization {
             SerializationType::COMPACT => {
                 let (encoded_issuer_protected_header, encoded_presentation_protected_header, encoded_payloads, encoded_proof) = expect_four!(encoded_jwp.splitn(4, '.'));
@@ -83,18 +82,25 @@ impl JwpPresented {
                 }
 
                 let proof = base64url_decode(encoded_proof);
-                let issuer_header_oct = serde_json::to_vec(&issuer_protected_header).unwrap();
-                let presentation_header_oct = serde_json::to_vec(&presentation_protected_header).unwrap();
-
-                match Self::verify_proof(presentation_protected_header.alg, key, &proof, &presentation_header_oct, &issuer_header_oct, &payloads) {
-                    Ok(_) => {
-                        Ok(Self{issuer_protected_header, payloads, proof: Some(proof), presentation_protected_header})
-                    },
-                    Err(e) => Err(e),
-                }            
+                
+                Ok(Self{issuer_protected_header, payloads, proof: Some(proof), presentation_protected_header})      
             },
             SerializationType::JSON => todo!()
         }
+    }
+
+    pub fn verify(&self, key: &Jwk) -> Result<(), CustomError> {
+        let issuer_header_oct = serde_json::to_vec(&self.issuer_protected_header).unwrap();
+        let presentation_header_oct = serde_json::to_vec(&self.presentation_protected_header).unwrap();
+        let proof = self.proof.as_ref().ok_or(CustomError::InvalidPresentedProof)?;
+        Self::verify_proof(self.presentation_protected_header.alg, key, &proof, &presentation_header_oct, &issuer_header_oct, &self.payloads)
+    }
+
+
+    pub fn decode_and_verify(encoded_jwp: String, serialization: SerializationType, key: &Jwk) -> Result<Self, CustomError> {
+        let jwp = Self::decode(encoded_jwp, serialization)?;
+        jwp.verify(key)?;
+        Ok(jwp)
     }
 
 

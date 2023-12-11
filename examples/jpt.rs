@@ -74,13 +74,7 @@ fn main() {
     // jpt_claims.set_claim(Some("age"), 42);
     jpt_claims.set_iss("https://issuer.example".to_owned());
     jpt_claims.set_claim(Some("vc"), custom_claims, true);
-    jpt_claims.set_claim(Some("test"), json!({
-        "a": "b",
-        "c": 1,
-        "d": {
-            "f": "g"
-        }
-    }), false);
+    
 
     
     println!("JptClaims: {:#?}", jpt_claims);
@@ -119,7 +113,7 @@ fn main() {
     let compact_issued_jwp = issued_jwp.encode(SerializationType::COMPACT, &bbs_jwk).unwrap();
     println!("Compact JWP: {}", compact_issued_jwp);
 
-    let decoded_issued_jwp = JwpIssued::decode(compact_issued_jwp, SerializationType::COMPACT, &bbs_jwk.to_public().unwrap()).unwrap();
+    let decoded_issued_jwp = JwpIssued::decode_and_verify(compact_issued_jwp, SerializationType::COMPACT, &bbs_jwk.to_public().unwrap()).unwrap();
 
     println!("DECODED ISSUED JWP \n{:?}", decoded_issued_jwp);
 
@@ -140,6 +134,6 @@ fn main() {
 
     println!("Compact Presented JWP: {}", compact_presented_jwp);
 
-    let decoded_presentation_jwp = JwpPresented::decode(compact_presented_jwp, SerializationType::COMPACT, &bbs_jwk.to_public().unwrap()).unwrap();
+    let decoded_presentation_jwp = JwpPresented::decode_and_verify(compact_presented_jwp, SerializationType::COMPACT, &bbs_jwk.to_public().unwrap()).unwrap();
     println!("DECODED PRESENTED JWP \n{:?}", decoded_presentation_jwp);
 }
