@@ -4,6 +4,11 @@
 [![](https://img.shields.io/crates/v/json-proof-token?style=flat-square)](https://crates.io/crates/json-proof-token)
 [![](https://img.shields.io/docsrs/json-proof-token?style=flat-square)](https://docs.rs/json-proof-token/)
 
+
+## Decoder
+
+[Here](https://cybersecurity-links.github.io/json-proof-token/) you can find a simple decoder for JSON Proof Tokens.
+
 ## Description
 
 Rust library implementing the new [JOSE Working Group](https://datatracker.ietf.org/wg/jose/documents/) drafts:
@@ -130,15 +135,11 @@ Add this to your Cargo.toml:
 
 ```
 [dependencies]
-json-proof-token = "0.2.2"
+json-proof-token = "0.2.3"
 ```
 
 ### Example
 Take a look at the [examples](https://github.com/Cybersecurity-LINKS/json-proof-token/tree/main/examples).
-
-## Decoder
-
-[Here](https://github.com/Cybersecurity-LINKS/json-proof-token/tree/main/decoder) you can find a simple decoder for JSON Proof Tokens.
 
 ## Tests
 
