@@ -40,4 +40,25 @@ pub enum CustomError {
 
     #[error("Index out of bounds!")]
     IndexOutOfBounds,
+
+    #[error("Incomplete Jwp build")]
+    IncompleteJwpBuild(IncompleteJwpBuild)
+}
+
+
+#[derive(Error, Debug)]
+pub enum IncompleteJwpBuild {
+
+    #[error("Issuer Header Not set!")]
+    NoIssuerHeader,
+
+    #[error("Presentation Header Not set!")]
+    NoPresentationHeader,
+
+    #[error("Claims and Payloads Not set!")]
+    NoClaimsAndPayloads,
+
+    #[error("JWK Not set! Cannot generate a JWP!")]
+    NoJwk
+
 }

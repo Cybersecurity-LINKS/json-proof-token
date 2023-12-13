@@ -16,9 +16,9 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{jpt::{payloads::{Payloads, PayloadType}, claims::Claims}, encoding::{base64url_encode, base64url_encode_serializable, SerializationType, Base64UrlDecodedSerializable, base64url_decode}, jwk::key::Jwk, jpa::{bbs_plus::BBSplusAlgorithm, algs::ProofAlgorithm}, errors::CustomError};
+use crate::{jpt::{payloads::{Payloads, PayloadType}, claims::{Claims, JptClaims}}, encoding::{base64url_encode, base64url_encode_serializable, SerializationType, Base64UrlDecodedSerializable, base64url_decode}, jwk::key::Jwk, jpa::{bbs_plus::BBSplusAlgorithm, algs::ProofAlgorithm}, errors::CustomError};
 
-use super::{header::{IssuerProtectedHeader, PresentationProtectedHeader}, presented::JwpPresented};
+use super::header::IssuerProtectedHeader;
 
 
 /// Takes the result of a rsplit and ensure we only get 3 parts (JwpIssued)
@@ -34,101 +34,55 @@ macro_rules! expect_three {
 }
 
 
+/// Used to build a new JSON Web Proof in the Issuer form
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct JwpIssued {
-    issuer_protected_header: IssuerProtectedHeader,
-    payloads: Payloads,
-    proof: Option<Vec<u8>>
+pub struct JwpIssuedBuilder {
+    issuer_protected_header: Option<IssuerProtectedHeader>,
+    payloads: Option<Payloads>,
 }
 
-impl JwpIssued {
-
-    pub fn new(issuer_protected_header: IssuerProtectedHeader, payloads: Payloads) -> Self{
-        Self { issuer_protected_header, payloads, proof: None }
+impl JwpIssuedBuilder {
+    pub fn new() -> Self {
+        Self{ issuer_protected_header: None, payloads: None }
     }
 
-    
-    pub fn encode(&self, serialization: SerializationType, key: &Jwk) -> Result<String, CustomError> {
-        // let encoded_issuer_header = base64url_encode_serializable(&self.issuer_protected_header);
+    pub fn issuer_protected_header(&mut self, header: IssuerProtectedHeader) -> &mut Self {
+        self.issuer_protected_header = Some(header);
+        self
+    }
 
-        let issuer_header_oct = serde_json::to_vec(&self.issuer_protected_header).unwrap();
+    pub fn jpt_claims(&mut self, jpt_claims: JptClaims) -> &mut Self {
 
-        let proof = Self::generate_proof(self.issuer_protected_header.alg, key, &issuer_header_oct, &self.payloads)?;
+        let (claims, payloads) = jpt_claims.get_claims_and_payloads();
+        //Set claims
+        self.issuer_protected_header.as_mut().and_then(|h| Some(h.set_claims(Some(claims))));
+        //Set payloads
+        self.payloads = Some(payloads);
+        self
+    }
 
-        let jwp = Self::serialize(serialization, &issuer_header_oct, &self.payloads, &proof);
+
+    pub fn build(&self, jwk: &Jwk) -> Result<JwpIssued, CustomError> {
+        if let Some(issuer_protected_header) = self.issuer_protected_header.clone() {
+            if let Some(payloads) = self.payloads.clone() {
+                let issuer_header_oct = serde_json::to_vec(&self.issuer_protected_header).unwrap();
+                let proof = Self::generate_proof(issuer_protected_header.alg(), &jwk, &issuer_header_oct, &payloads)?;
         
-        Ok(jwp)
-    }
-
-    pub fn decode(encoded_jwp: String, serialization: SerializationType) -> Result<Self, CustomError> {
-        match serialization {
-            SerializationType::COMPACT => {
-                let (encoded_issuer_protected_header, encoded_payloads, encoded_proof) = expect_three!(encoded_jwp.splitn(3, '.')); 
-                //TODO: this needs to be checked because doesn't return an error if the value is not deserializable into an IssuerProtectedHeader struct
-                let issuer_protected_header: IssuerProtectedHeader = Base64UrlDecodedSerializable::from_serializable_values(encoded_issuer_protected_header).deserialize::<IssuerProtectedHeader>();
-                
-                //TODO: this could not have much sense for now (maybe useful to handle blind signatures?)
-                let payloads = Payloads(encoded_payloads.splitn(issuer_protected_header.claims.as_ref().unwrap().0.len(), "~").map(|v| {
-                    if v == "" {
-                        (serde_json::Value::Null, PayloadType::Undisclosed)
-                    } else {
-                        (serde_json::from_slice(&base64url_decode(v)).unwrap(), PayloadType::Disclosed)
-                    }
-                }).collect());
-
-                if !match &issuer_protected_header.claims {
-                    Some(claims) => claims.0.len() == payloads.0.len(),
-                    None => payloads.0.len() == 0,
-                } {
-                    return Err(CustomError::InvalidIssuedJwp);
-                }
-
-                let proof = base64url_decode(encoded_proof);
-                Ok(Self{issuer_protected_header, payloads, proof: Some(proof)})          
-            },
-            SerializationType::JSON => todo!()
+                Ok(JwpIssued{ issuer_protected_header, payloads, proof })
+            } else {
+                Err(CustomError::IncompleteJwpBuild(crate::errors::IncompleteJwpBuild::NoClaimsAndPayloads))
+            }
+        } else {
+            Err(CustomError::IncompleteJwpBuild(crate::errors::IncompleteJwpBuild::NoIssuerHeader))
         }
-    }
-
-    pub fn verify(&self, key: &Jwk) ->Result<(), CustomError> {
-        let issuer_header_oct = serde_json::to_vec(&self.issuer_protected_header).unwrap();
-        let proof = self.proof.as_ref().ok_or(CustomError::InvalidIssuedProof)?;
-        Self::verify_proof(self.issuer_protected_header.alg, key, proof, &issuer_header_oct, &self.payloads)  
-    }
-
-    pub fn decode_and_verify(encoded_jwp: String, serialization: SerializationType, key: &Jwk) -> Result<Self, CustomError> {
-        let jwp = Self::decode(encoded_jwp, serialization)?;
-        jwp.verify(key)?;
-        Ok(jwp)
-    }
-
-
-    pub fn get_issuer_protected_header(&self) -> &IssuerProtectedHeader {
-        &self.issuer_protected_header
-    }
-
-    pub fn get_claims(&self) -> &Option<Claims>{
-        &self.issuer_protected_header.claims
-    }
-
-    pub fn get_payloads(&self) -> &Payloads {
-        &self.payloads
-    }
-
-    pub fn get_proof(&self) -> Option<&Vec<u8>> {
-        self.proof.as_ref()
-    }
-
-    pub fn present(&self, serialization: SerializationType, key: &Jwk, presentation_header: PresentationProtectedHeader) -> Result<String, CustomError> {
-        let jwp = JwpPresented::new(self.issuer_protected_header.clone(), presentation_header, self.payloads.clone());
-        jwp.encode(serialization, key, self.get_proof().unwrap())
 
     }
 
-    fn generate_proof(alg: ProofAlgorithm, key: &Jwk, issuer_header_oct: &[u8],  payloads: &Payloads) -> Result<String, CustomError>{
+
+    fn generate_proof(alg: ProofAlgorithm, key: &Jwk, issuer_header_oct: &[u8],  payloads: &Payloads) -> Result<Vec<u8>, CustomError>{
         let proof = match alg {
             ProofAlgorithm::BLS12381_SHA256 | ProofAlgorithm::BLS12381_SHAKE256 => {
-                base64url_encode(BBSplusAlgorithm::generate_issuer_proof(alg, payloads, key, issuer_header_oct)?)
+                BBSplusAlgorithm::generate_issuer_proof(alg, payloads, key, issuer_header_oct)?
             },
             ProofAlgorithm::SU_ES256 => todo!(),
             ProofAlgorithm::MAC_H256 => todo!(),
@@ -142,6 +96,67 @@ impl JwpIssued {
         };
 
         Ok(proof)
+    }
+}
+
+
+
+/// Used for both decoding and verifing a JSON Proof Token representing a JWP in the Issuer form
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+pub struct JwpIssuedVerifier {
+    issuer_protected_header: IssuerProtectedHeader,
+    payloads: Payloads,
+    proof: Vec<u8>,
+}
+
+impl JwpIssuedVerifier {
+    /// Decode a JSON Proof Token. The token must represent an Issued JWP, otherwise will return an error.
+    pub fn decode(jpt: &str, serialization: SerializationType) -> Result<Self, CustomError> {
+        match serialization {
+            SerializationType::COMPACT => {
+                let (encoded_issuer_protected_header, encoded_payloads, encoded_proof) = expect_three!(jpt.splitn(3, '.')); 
+                //TODO: this needs to be checked because doesn't return an error if the value is not deserializable into an IssuerProtectedHeader struct
+                let issuer_protected_header: IssuerProtectedHeader = Base64UrlDecodedSerializable::from_serializable_values(encoded_issuer_protected_header).deserialize::<IssuerProtectedHeader>();
+                
+                //TODO: this could not have much sense for now (maybe useful to handle blind signatures?)
+                let payloads = Payloads(encoded_payloads.splitn(issuer_protected_header.claims().unwrap().0.len(), "~").map(|v| {
+                    if v == "" {
+                        (serde_json::Value::Null, PayloadType::Undisclosed)
+                    } else {
+                        (serde_json::from_slice(&base64url_decode(v)).unwrap(), PayloadType::Disclosed)
+                    }
+                }).collect());
+
+                if !match issuer_protected_header.claims() {
+                    Some(claims) => claims.0.len() == payloads.0.len(),
+                    None => payloads.0.len() == 0,
+                } {
+                    return Err(CustomError::InvalidIssuedJwp);
+                }
+
+                let proof = base64url_decode(encoded_proof);
+                Ok(Self{issuer_protected_header, payloads, proof: proof})          
+            },
+            SerializationType::JSON => todo!()
+        }
+    }
+
+    /// Verify the decoded JWP
+    pub fn verify(&self, key: &Jwk) -> Result<JwpIssued, CustomError> {
+        let issuer_header_oct = serde_json::to_vec(&self.issuer_protected_header).unwrap();
+        
+        Self::verify_proof(self.issuer_protected_header.alg(), key, &self.proof, &issuer_header_oct, &self.payloads)?;
+
+        Ok(JwpIssued {
+            issuer_protected_header: self.issuer_protected_header.clone(),
+            payloads: self.payloads.clone(),
+            proof: self.proof.clone(),
+        })
+        
+    }
+
+    pub fn get_header(&self) -> &IssuerProtectedHeader {
+        &self.issuer_protected_header
     }
 
     fn verify_proof(alg: ProofAlgorithm, key: &Jwk, proof: &[u8], issuer_header_oct: &[u8], payloads: &Payloads) -> Result<(), CustomError> {
@@ -162,10 +177,51 @@ impl JwpIssued {
 
         check
     }
+}
 
-    fn serialize(serialization: SerializationType, issuer_header_oct: &[u8], payloads: &Payloads, proof: &str) -> String {
-        let encoded_issuer_header = base64url_encode(issuer_header_oct);
+
+
+/// Decoded and verified JSON Web Proof in the Issuer form
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+pub struct JwpIssued {
+    issuer_protected_header: IssuerProtectedHeader,
+    payloads: Payloads,
+    proof: Vec<u8>
+}
+
+impl JwpIssued {
+    /// Encode the currently crafted JWP
+    pub fn encode(&self, serialization: SerializationType) -> Result<String, CustomError> {
+        // let encoded_issuer_header = base64url_encode_serializable(&self.issuer_protected_header);
+
+        let issuer_header_oct = serde_json::to_vec(&self.issuer_protected_header).unwrap();
+
+        let jwp = Self::serialize(serialization, &issuer_header_oct, &self.payloads, &self.proof);
         
+        Ok(jwp)
+    }
+
+
+    pub fn get_issuer_protected_header(&self) -> &IssuerProtectedHeader {
+        &self.issuer_protected_header
+    }
+
+    pub fn get_claims(&self) -> Option<&Claims>{
+        self.issuer_protected_header.claims()
+    }
+
+    pub fn get_payloads(&self) -> &Payloads {
+        &self.payloads
+    }
+
+    pub fn get_proof(&self) -> &[u8] {
+        self.proof.as_ref()
+    }
+  
+
+    fn serialize(serialization: SerializationType, issuer_header_oct: &[u8], payloads: &Payloads, proof: &[u8]) -> String {
+        let encoded_issuer_header = base64url_encode(issuer_header_oct);
+        let encoded_proof = base64url_encode(proof);
         let jwp = match serialization {
             SerializationType::COMPACT => {
                 let encoded_payloads = payloads.0.iter().map(|p| {
@@ -180,7 +236,7 @@ impl JwpIssued {
 
                 
 
-                format!("{}.{}.{}", encoded_issuer_header, encoded_payloads, proof)
+                format!("{}.{}.{}", encoded_issuer_header, encoded_payloads, encoded_proof)
                 
             },
             SerializationType::JSON => todo!(),
@@ -189,3 +245,4 @@ impl JwpIssued {
         jwp
     }
 }
+

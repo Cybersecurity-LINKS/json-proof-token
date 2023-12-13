@@ -17,40 +17,12 @@
 
 use std::collections::HashMap;
 
-use jsonprooftoken::{jpt::claims::JptClaims, jwp::{header::{IssuerProtectedHeader, PresentationProtectedHeader}, issued::JwpIssued, presented::JwpPresented}, jpa::algs::ProofAlgorithm, encoding::{base64url_encode, SerializationType}, jwk::{key::Jwk, types::KeyPairSubtype, alg_parameters::JwkAlgorithmParameters}};
+use jsonprooftoken::{jpt::claims::JptClaims, jwp::{header::{IssuerProtectedHeader, PresentationProtectedHeader}, issued::{JwpIssued, JwpIssuedBuilder, JwpIssuedVerifier}, presented::{JwpPresented, JwpPresentedBuilder, JwpPresentedVerifier}}, jpa::algs::ProofAlgorithm, encoding::{base64url_encode, SerializationType}, jwk::{key::Jwk, types::KeyPairSubtype, alg_parameters::JwkAlgorithmParameters}};
 use serde::Serialize;
 use serde_json::{Value, json};
 
 
 fn main() {
-
-    // let jpt_claims = JptClaims {
-    //     sub: Some("user123".to_string()),
-    //     exp: Some(1633756800),
-    //     nbf: Some(1633670400),
-    //     iat: Some(1633666800),
-    //     jti: Some("123456".to_string()),
-    //     custom: Some(serde_json::json!({
-    //         "degree": {
-    //             "type": "BachelorDegree",
-    //             "name": "Bachelor of Science and Arts",
-    //             "ciao": [
-    //                 {"u1": "value1"}, 
-    //                 {"u2": "value2"}
-    //                 ]
-    //             },
-    //         "name": "John Doe"
-    //     })),
-    // };
-    
-   
-
-    // let custom_claims = serde_json::json!({
-    //     "family_name": "Doe",
-    //     "given_name": "Jay",
-    //     "email": "jaydoe@example.org",
-    //     "age": 42
-    // });
 
     let custom_claims = serde_json::json!({
         "degree": {
@@ -65,75 +37,53 @@ fn main() {
     });
 
 
-
-
     let mut jpt_claims = JptClaims::new();
-    // jpt_claims.set_claim(Some("family_name"), "Doe");
-    // jpt_claims.set_claim(Some("given_name"), "Jay");
-    // jpt_claims.set_claim(Some("email"), "jaydoe@example.org");
-    // jpt_claims.set_claim(Some("age"), 42);
     jpt_claims.set_iss("https://issuer.example".to_owned());
     jpt_claims.set_claim(Some("vc"), custom_claims, true);
     
 
-    
-    println!("JptClaims: {:#?}", jpt_claims);
-    let (claims, payloads) = jpt_claims.get_claims_and_payloads();
-
-    println!("Claims: {:?}", claims);
-    println!("Payloads: {:?}", payloads);
-
-
-    let original_jpt_claims = JptClaims::from_claims_and_payloads(&claims, &payloads);
-    println!("Original JptClaims: {:#?}", original_jpt_claims);
-    let (claims2, payload2) = jpt_claims.get_claims_and_payloads();
-
-    assert_eq!(claims,claims2);
-    assert_eq!(payloads, payload2);
-
-
-
-    let issued_header = IssuerProtectedHeader{
-        typ: Some("JPT".to_owned()),
-        alg: ProofAlgorithm::BLS12381_SHA256,
-        kid: None,
-        cid: None,
-        claims: Some(claims),
-    };
-
-    println!("Issued Header: {:?}", issued_header);
-
-    let issued_jwp = JwpIssued::new(issued_header, payloads);
-    println!("ISSUED JWP: \n{:?}", issued_jwp);
-
+    let issued_header = IssuerProtectedHeader::new(ProofAlgorithm::BLS12381_SHA256);
 
     let bbs_jwk = Jwk::generate(KeyPairSubtype::BLS12381SHA256).unwrap();
-    println!("BBS Jwk: {:?}", bbs_jwk);
+    println!("\nBBS Jwk:\n {:#}", serde_json::to_string_pretty(&bbs_jwk).unwrap());
+
+    let issued_jwp = JwpIssuedBuilder::new()
+    .issuer_protected_header(issued_header)
+    .jpt_claims(jpt_claims)
+    .build(&bbs_jwk)
+    .unwrap();
+
+    let compact_issued_jwp = issued_jwp.encode(SerializationType::COMPACT).unwrap();
+    println!("\nCompact Issued JWP: {}", compact_issued_jwp);
+
+
+    let decoded_issued_jwp = JwpIssuedVerifier::decode(&compact_issued_jwp, SerializationType::COMPACT).unwrap()
+    .verify(&bbs_jwk.to_public().unwrap())
+    .unwrap();
+
+
+    assert_eq!(issued_jwp, decoded_issued_jwp);
+
+    let mut presentation_header = PresentationProtectedHeader::new(ProofAlgorithm::BLS12381_SHA256_PROOF);
+    presentation_header.set_aud(Some("https://recipient.example.com".to_owned()));
+    presentation_header.set_nonce(Some("wrmBRkKtXjQ".to_owned()));
+
+
+    let presented_jwp = JwpPresentedBuilder::new(&decoded_issued_jwp)
+    .presentation_protected_header(presentation_header)
+    .set_disclosed_payload(1, false).unwrap()
+    .set_disclosed_payload(3, false).unwrap()
+    .build(&bbs_jwk.to_public().unwrap())
+    .unwrap();
     
-    let compact_issued_jwp = issued_jwp.encode(SerializationType::COMPACT, &bbs_jwk).unwrap();
-    println!("Compact JWP: {}", compact_issued_jwp);
 
-    let decoded_issued_jwp = JwpIssued::decode_and_verify(compact_issued_jwp, SerializationType::COMPACT, &bbs_jwk.to_public().unwrap()).unwrap();
+    let compact_presented_jwp = presented_jwp.encode(SerializationType::COMPACT).unwrap();
 
-    println!("DECODED ISSUED JWP \n{:?}", decoded_issued_jwp);
+    println!("\nCompact Presented JWP: {}", compact_presented_jwp);
 
 
-    let presentation_header = PresentationProtectedHeader{
-        alg: ProofAlgorithm::BLS12381_SHA256_PROOF,
-        kid: None,
-        aud: Some("https://recipient.example.com".to_owned()),
-        nonce: Some("wrmBRkKtXjQ".to_owned())
-    };
+    let decoded_presented_jwp = JwpPresentedVerifier::decode(&compact_presented_jwp, SerializationType::COMPACT).unwrap()
+    .verify(&bbs_jwk.to_public().unwrap())
+    .unwrap();
 
-    
-    let mut presentation_jwp = JwpPresented::new(decoded_issued_jwp.get_issuer_protected_header().clone(),presentation_header, decoded_issued_jwp.get_payloads().clone());
-    presentation_jwp.set_disclosed(1, false).unwrap();
-    presentation_jwp.set_disclosed(3, false).unwrap();
-
-    let compact_presented_jwp = presentation_jwp.encode(SerializationType::COMPACT, &bbs_jwk.to_public().unwrap(), decoded_issued_jwp.get_proof().unwrap()).unwrap();
-
-    println!("Compact Presented JWP: {}", compact_presented_jwp);
-
-    let decoded_presentation_jwp = JwpPresented::decode_and_verify(compact_presented_jwp, SerializationType::COMPACT, &bbs_jwk.to_public().unwrap()).unwrap();
-    println!("DECODED PRESENTED JWP \n{:?}", decoded_presentation_jwp);
 }

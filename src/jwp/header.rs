@@ -23,30 +23,135 @@ use crate::{jpt::claims::Claims, jpa::algs::ProofAlgorithm};
 pub struct IssuerProtectedHeader {
     /// JWP type (JPT)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub typ: Option<String>,
+    typ: Option<String>,
     /// Algorithm used for the JWP
-    pub alg: ProofAlgorithm,
+    alg: ProofAlgorithm,
     /// ID for the key used for the JWP.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub kid: Option<String>,
+    kid: Option<String>,
     /// cid can be used similar to a cid in order to ensure externally resolve of claims. FOr now this is not handled!
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub cid: Option<String>, 
+    cid: Option<String>, 
     /// if you want you can put the claims directly into the header
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub claims: Option<Claims>
+    claims: Option<Claims>
 }
+
+
+impl IssuerProtectedHeader {
+
+    pub fn new(alg: ProofAlgorithm) -> Self {
+        Self{
+            typ: Some("JPT".to_owned()),
+            alg,
+            kid: None,
+            cid: None,
+            claims: None
+        }
+    }
+
+
+    // Getter for alg
+    pub fn alg(&self) -> ProofAlgorithm {
+        self.alg
+    }
+
+    // Getter for typ
+    pub fn typ(&self) -> Option<&String> {
+        self.typ.as_ref()
+    }
+
+    // Getter for kid
+    pub fn kid(&self) -> Option<&String> {
+        self.kid.as_ref()
+    }
+
+    // Setter for kid
+    pub fn set_kid(&mut self, value: Option<String>) {
+        self.kid = value;
+    }
+
+    // Getter for cid
+    pub fn cid(&self) -> Option<&String> {
+        self.cid.as_ref()
+    }
+
+    // Setter for cid
+    pub fn set_cid(&mut self, value: Option<String>) {
+        self.cid = value;
+    }
+
+    // Getter for claims
+    pub fn claims(&self) -> Option<&Claims> {
+        self.claims.as_ref()
+    }
+
+    // Setter for claims
+    pub fn set_claims(&mut self, value: Option<Claims>) {
+        self.claims = value;
+    }
+}
+
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct PresentationProtectedHeader {
-    pub alg: ProofAlgorithm,
+    alg: ProofAlgorithm,
     /// ID for the key used for the JWP.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub kid: Option<String>,
+    kid: Option<String>,
     /// Who have to receive the JPT.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub aud: Option<String>,
+    aud: Option<String>,
     /// For replay attacks
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub nonce: Option<String>
+    nonce: Option<String>
 }
+
+impl PresentationProtectedHeader {
+
+    pub fn new(alg: ProofAlgorithm) -> Self {
+        Self {
+            alg,
+            kid: None,
+            aud: None,
+            nonce: None,
+        }
+    }
+
+
+    // Getter for alg
+    pub fn alg(&self) -> ProofAlgorithm {
+        self.alg
+    }
+
+    // Getter for kid
+    pub fn kid(&self) -> Option<&String> {
+        self.kid.as_ref()
+    }
+
+    // Setter for kid
+    pub fn set_kid(&mut self, value: Option<String>) {
+        self.kid = value;
+    }
+
+    // Getter for aud
+    pub fn aud(&self) -> Option<&String> {
+        self.aud.as_ref()
+    }
+
+    // Setter for aud
+    pub fn set_aud(&mut self, value: Option<String>) {
+        self.aud = value;
+    }
+
+    // Getter for nonce
+    pub fn nonce(&self) -> Option<&String> {
+        self.nonce.as_ref()
+    }
+
+    // Setter for nonce
+    pub fn set_nonce(&mut self, value: Option<String>) {
+        self.nonce = value;
+    }
+}
+
