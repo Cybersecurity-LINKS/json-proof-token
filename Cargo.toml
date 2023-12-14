@@ -1,12 +1,13 @@
 [package]
 name = "json-proof-token"
-version = "0.2.5"
+version = "0.2.6"
 edition = "2021"
 authors = ["LINKS Foundation"]
 repository = "https://github.com/Cybersecurity-LINKS/json-proof-token"
 description = """A library implementation based on the new JOSE Working Group draft specifications: 
 JSON Web Proof (JWP), JSON Proof Token (JPT) and JSON Proof Algorithm (JPA)."""
-
+keywords = [ "jose", "jwp", "jpt", "jwk", "zero-knowledge" ]
+categories = [ "cryptography", "authentication" ]
 license = "Apache-2.0"
 rust-version = "1.65"
 
