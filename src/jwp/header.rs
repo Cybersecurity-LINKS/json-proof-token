@@ -61,6 +61,11 @@ impl IssuerProtectedHeader {
         self.typ.as_ref()
     }
 
+    // Setter for typ
+    pub fn set_typ(&mut self, value: Option<String>) {
+        self.typ = value;
+    }
+
     // Getter for kid
     pub fn kid(&self) -> Option<&String> {
         self.kid.as_ref()
@@ -87,7 +92,7 @@ impl IssuerProtectedHeader {
     }
 
     // Setter for claims
-    pub fn set_claims(&mut self, value: Option<Claims>) {
+    pub(crate) fn set_claims(&mut self, value: Option<Claims>) {
         self.claims = value;
     }
 }
