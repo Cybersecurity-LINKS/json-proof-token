@@ -13,7 +13,10 @@
 // limitations under the License.
 
 
+use indexmap::IndexMap;
+use json_unflattening::flattening::flatten;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 use crate::{jpt::{payloads::{Payloads, PayloadType}, claims::Claims}, errors::CustomError, encoding::{SerializationType, base64url_encode_serializable, base64url_encode, Base64UrlDecodedSerializable, base64url_decode}, jwk::key::Jwk, jpa::{algs::ProofAlgorithm, bbs_plus::BBSplusAlgorithm}};
 
@@ -56,11 +59,11 @@ impl JwpPresentedBuilder {
         self
     }
 
-    pub fn set_disclosed_payload(&mut self, index: usize, disclosed: bool) -> Result<&mut Self, CustomError>{
-        self.payloads.set_disclosed(index, disclosed)?;
+    pub fn set_undisclosed(&mut self, claim: &str) -> Result<&mut Self, CustomError> {
+        let index = self.issuer_protected_header.claims().and_then(|c| c.0.iter().position(|x| x==claim)).ok_or(CustomError::SelectiveDisclosureError)?;
+        self.payloads.set_undisclosed(index)?;
         Ok(self)
     }
-
 
 
     pub fn build(&self, jwk: &Jwk) -> Result<JwpPresented, CustomError> {

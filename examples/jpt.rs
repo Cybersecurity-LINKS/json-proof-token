@@ -71,8 +71,9 @@ fn main() {
 
     let presented_jwp = JwpPresentedBuilder::new(&decoded_issued_jwp)
     .presentation_protected_header(presentation_header)
-    .set_disclosed_payload(1, false).unwrap()
-    .set_disclosed_payload(3, false).unwrap()
+    .set_undisclosed("vc.degree.name").unwrap()
+    .set_undisclosed("vc.degree.ciao[0].u1").unwrap()
+    .set_undisclosed("vc.name").unwrap()
     .build(&bbs_jwk.to_public().unwrap())
     .unwrap();
     
@@ -82,8 +83,9 @@ fn main() {
     println!("\nCompact Presented JWP: {}", compact_presented_jwp);
 
 
-    let decoded_presented_jwp = JwpPresentedVerifier::decode(&compact_presented_jwp, SerializationType::COMPACT).unwrap()
+    let _decoded_presented_jwp = JwpPresentedVerifier::decode(&compact_presented_jwp, SerializationType::COMPACT).unwrap()
     .verify(&bbs_jwk.to_public().unwrap())
     .unwrap();
+
 
 }

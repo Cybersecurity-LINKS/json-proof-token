@@ -55,7 +55,7 @@ pub struct JptClaims {
     /// Time before which the JPT MUST NOT be accepted
     #[serde(skip_serializing_if = "Option::is_none")]
     pub nbf: Option<i64>,
-    /// Issue time
+    /// Issuance time
     #[serde(skip_serializing_if = "Option::is_none")]
     pub iat: Option<i64>,
     /// Unique ID for the JPT.

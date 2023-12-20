@@ -42,7 +42,13 @@ pub enum CustomError {
     IndexOutOfBounds,
 
     #[error("Incomplete Jwp build")]
-    IncompleteJwpBuild(IncompleteJwpBuild)
+    IncompleteJwpBuild(IncompleteJwpBuild),
+
+    #[error("Error during JSON flattening process")]
+    FlatteningError,
+
+    #[error("Error during selective disclosure of an attribute")]
+    SelectiveDisclosureError
 }
 
 

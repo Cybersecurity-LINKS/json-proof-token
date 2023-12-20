@@ -15,7 +15,7 @@
 
 
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{Value, Map};
 use crate::errors::CustomError;
 
 ///TODO: Not clear what to do with this information 
@@ -95,21 +95,14 @@ impl Payloads {
         disclosed_payloads
     }
 
+    pub fn set_undisclosed(&mut self, index: usize) -> Result<(), CustomError> {
 
-    pub fn set_disclosed(&mut self, index: usize, disclosed: bool) -> Result<(), CustomError>{
-        if let Some(p) = self.0.get_mut(index) {
-            // Get the reference to the tuple at the specified index
-    
-            // Preserve the String value while changing the PayloadType
-            let payload_value = p.0.clone();
-            match disclosed {
-                true => *p = (payload_value, PayloadType::Disclosed),
-                false => *p = (payload_value, PayloadType::Undisclosed)
-            };
-            Ok(())
-        } else {
-            // Handle the case where the index is out of bounds
-            Err(CustomError::IndexOutOfBounds)
-        }
+        self.0.iter_mut().enumerate().for_each(|(i, v)| {
+            if index == i {
+                v.1 = PayloadType::Undisclosed;
+            }
+        });
+
+        Ok(())
     }
 }
