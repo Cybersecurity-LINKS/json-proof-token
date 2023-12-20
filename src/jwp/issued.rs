@@ -103,13 +103,13 @@ impl JwpIssuedBuilder {
 
 /// Used for both decoding and verifing a JSON Proof Token representing a JWP in the Issuer form
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct JwpIssuedVerifier {
+pub struct JwpIssuedDecoder {
     issuer_protected_header: IssuerProtectedHeader,
     payloads: Payloads,
     proof: Vec<u8>,
 }
 
-impl JwpIssuedVerifier {
+impl JwpIssuedDecoder {
     /// Decode a JSON Proof Token. The token must represent an Issued JWP, otherwise will return an error.
     pub fn decode(jpt: &str, serialization: SerializationType) -> Result<Self, CustomError> {
         match serialization {
@@ -157,6 +157,10 @@ impl JwpIssuedVerifier {
 
     pub fn get_header(&self) -> &IssuerProtectedHeader {
         &self.issuer_protected_header
+    }
+
+    pub fn get_payloads(&self) -> &Payloads {
+        &self.payloads
     }
 
     fn verify_proof(alg: ProofAlgorithm, key: &Jwk, proof: &[u8], issuer_header_oct: &[u8], payloads: &Payloads) -> Result<(), CustomError> {

@@ -107,14 +107,14 @@ impl JwpPresentedBuilder {
 
 /// Used for both decoding and verifing a JSON Proof Token representing a JWP in the Presentation form
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct JwpPresentedVerifier {
+pub struct JwpPresentedDecoder {
     issuer_protected_header: IssuerProtectedHeader,
     presentation_protected_header: PresentationProtectedHeader,
     payloads: Payloads,
     proof: Vec<u8>,
 }
 
-impl JwpPresentedVerifier {
+impl JwpPresentedDecoder {
     /// Decode a JSON Proof Token. The token must represent a Presented JWP, otherwise will return an error.
     pub fn decode(jpt: &str, serialization: SerializationType) -> Result<Self, CustomError> {
         match serialization {
@@ -165,6 +165,10 @@ impl JwpPresentedVerifier {
 
     pub fn get_presentation_header(&self) -> &PresentationProtectedHeader {
         &self.presentation_protected_header
+    }
+
+    pub fn get_payloads(&self) -> &Payloads {
+        &self.payloads
     }
 
     fn verify_proof(alg: ProofAlgorithm, key: &Jwk, proof: &[u8], presentation_header_oct: &[u8], issuer_header_oct: &[u8], payloads: &Payloads) -> Result<(), CustomError> {
