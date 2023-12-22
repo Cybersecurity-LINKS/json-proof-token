@@ -95,7 +95,7 @@ impl Payloads {
         disclosed_payloads
     }
 
-    pub fn set_undisclosed(&mut self, index: usize) -> Result<(), CustomError> {
+    pub fn set_undisclosed(&mut self, index: usize){
 
         self.0.iter_mut().enumerate().for_each(|(i, v)| {
             if index == i {
@@ -103,6 +103,5 @@ impl Payloads {
             }
         });
 
-        Ok(())
     }
 }

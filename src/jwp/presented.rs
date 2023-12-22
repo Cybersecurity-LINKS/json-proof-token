@@ -61,7 +61,7 @@ impl JwpPresentedBuilder {
 
     pub fn set_undisclosed(&mut self, claim: &str) -> Result<&mut Self, CustomError> {
         let index = self.issuer_protected_header.claims().and_then(|c| c.0.iter().position(|x| x==claim)).ok_or(CustomError::SelectiveDisclosureError)?;
-        self.payloads.set_undisclosed(index)?;
+        self.payloads.set_undisclosed(index);
         Ok(self)
     }
 
