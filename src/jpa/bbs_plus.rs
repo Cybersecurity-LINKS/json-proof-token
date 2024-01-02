@@ -16,9 +16,9 @@
 use serde::{Deserialize, Serialize};
 use zkryptium::{bbsplus::{keys::{BBSplusPublicKey, BBSplusSecretKey}, signature::BBSplusSignature, proof::BBSplusPoKSignature}, utils::message::BBSplusMessage, schemes::{generics::{Signature, PoKSignature}, algorithms::{BBS_BLS12381_SHA256, BBS_BLS12381_SHAKE256, Scheme}}};
 
-use crate::{jwk::{key::Jwk, utils::check_alg_curve_compatibility, alg_parameters::{Algorithm, JwkAlgorithmParameters}}, errors::CustomError, encoding::base64url_decode, jpt::payloads::Payloads};
+use crate::{jwk::{key::Jwk, utils::{check_alg_curve_compatibility, check_presentation_alg_curve_compatibility}, alg_parameters::{Algorithm, JwkAlgorithmParameters}}, errors::CustomError, encoding::base64url_decode, jpt::payloads::Payloads};
 
-use super::algs::ProofAlgorithm;
+use super::algs::{ProofAlgorithm, PresentationProofAlgorithm};
 
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
@@ -114,7 +114,7 @@ impl BBSplusAlgorithm {
         }
     }
 
-    pub fn generate_presentation_proof(alg: ProofAlgorithm, signature: &[u8], payloads: &Payloads, key: &Jwk, issuer_header: &[u8], presentation_header: &[u8]) ->  Result<Vec<u8>, CustomError> {
+    pub fn generate_presentation_proof(alg: PresentationProofAlgorithm, signature: &[u8], payloads: &Payloads, key: &Jwk, issuer_header: &[u8], presentation_header: &[u8]) ->  Result<Vec<u8>, CustomError> {
         let key_params = match &key.key_params {
             JwkAlgorithmParameters::OctetKeyPair(params) => {
                 if params.is_public() == false {
@@ -125,7 +125,7 @@ impl BBSplusAlgorithm {
             _ => return Err(CustomError::ProofGenerationError("key is not compatible".to_string()))
         };
         
-        if check_alg_curve_compatibility(Algorithm::Proof(alg.clone()), key_params.crv.clone()) == false {
+        if check_presentation_alg_curve_compatibility(alg, key_params.crv.clone()) == false {
             Err(CustomError::ProofGenerationError("key is not compatible".to_string()))
         } else {
             let dec_pk = base64url_decode(&key_params.x);
@@ -134,7 +134,7 @@ impl BBSplusAlgorithm {
             let signature = BBSplusSignature::from_bytes(signature.try_into().unwrap()).unwrap();
 
             let proof = match alg {
-                ProofAlgorithm::BLS12381_SHA256_PROOF => {
+                PresentationProofAlgorithm::BLS12381_SHA256_PROOF => {
                     let messages: Vec<BBSplusMessage> = payloads.0
                     .iter()
                     .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHA256 as Scheme>::Ciphersuite>(&serde_json::to_vec(&p.0).unwrap(), None))
@@ -142,7 +142,7 @@ impl BBSplusAlgorithm {
                     PoKSignature::<BBS_BLS12381_SHA256>::proof_gen(&signature, &pk, Some(&messages), None, Some(&revealed_message_indexes), Some(issuer_header), Some(presentation_header), None).to_bytes()
             
                 },
-                ProofAlgorithm::BLS12381_SHAKE256_PROOF => {
+                PresentationProofAlgorithm::BLS12381_SHAKE256_PROOF => {
                     let messages: Vec<BBSplusMessage> = payloads.0
                     .iter()
                     .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHAKE256 as Scheme>::Ciphersuite>(&serde_json::to_vec(&p.0).unwrap(), None))
@@ -156,7 +156,7 @@ impl BBSplusAlgorithm {
         }
     }
 
-    pub fn verify_presentation_proof(alg: ProofAlgorithm, key: &Jwk, proof: &[u8], presentation_header: &[u8], issuer_header: &[u8], payloads: &Payloads) -> Result<(), CustomError>  {
+    pub fn verify_presentation_proof(alg: PresentationProofAlgorithm, key: &Jwk, proof: &[u8], presentation_header: &[u8], issuer_header: &[u8], payloads: &Payloads) -> Result<(), CustomError>  {
         let key_params = match &key.key_params {
             JwkAlgorithmParameters::OctetKeyPair(params) => {
                 if params.is_public() == false {
@@ -167,7 +167,7 @@ impl BBSplusAlgorithm {
             _ => return Err(CustomError::ProofGenerationError("key is not compatible".to_string()))
         };
         
-        if check_alg_curve_compatibility(Algorithm::Proof(alg.clone()), key_params.crv.clone()) == false {
+        if check_presentation_alg_curve_compatibility(alg, key_params.crv.clone()) == false {
             Err(CustomError::ProofGenerationError("key is not compatible".to_string()))
         } else {
             let dec_pk = base64url_decode(&key_params.x);
@@ -175,7 +175,7 @@ impl BBSplusAlgorithm {
             let disclosed_indexes = payloads.get_disclosed_indexes();
             let proof = BBSplusPoKSignature::from_bytes(proof.try_into().unwrap());
             let check = match alg {
-                ProofAlgorithm::BLS12381_SHA256_PROOF => {
+                PresentationProofAlgorithm::BLS12381_SHA256_PROOF => {
                     let messages: Vec<BBSplusMessage> = payloads.get_disclosed_payloads()
                     .iter()
                     .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHA256 as Scheme>::Ciphersuite>(&serde_json::to_vec(p).unwrap(), None))
@@ -184,7 +184,7 @@ impl BBSplusAlgorithm {
                     proof.proof_verify(&pk, Some(&messages), None, Some(&disclosed_indexes), Some(issuer_header), Some(presentation_header))
                     
                 },
-                ProofAlgorithm::BLS12381_SHAKE256_PROOF => {
+                PresentationProofAlgorithm::BLS12381_SHAKE256_PROOF => {
                     let messages: Vec<BBSplusMessage> = payloads.get_disclosed_payloads()
                     .iter()
                     .map(|p| BBSplusMessage::map_message_to_scalar_as_hash::<<BBS_BLS12381_SHAKE256 as Scheme>::Ciphersuite>(&serde_json::to_vec(p).unwrap(), None))

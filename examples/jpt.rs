@@ -64,7 +64,7 @@ fn main() {
 
     assert_eq!(issued_jwp, decoded_issued_jwp);
 
-    let mut presentation_header = PresentationProtectedHeader::new(ProofAlgorithm::BLS12381_SHA256_PROOF);
+    let mut presentation_header = PresentationProtectedHeader::new(decoded_issued_jwp.get_issuer_protected_header().alg().into());
     presentation_header.set_aud(Some("https://recipient.example.com".to_owned()));
     presentation_header.set_nonce(Some("wrmBRkKtXjQ".to_owned()));
 

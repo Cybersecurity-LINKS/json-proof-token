@@ -17,7 +17,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{jpt::claims::Claims, jpa::algs::ProofAlgorithm};
+use crate::{jpt::claims::Claims, jpa::algs::{ProofAlgorithm, PresentationProofAlgorithm}};
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct IssuerProtectedHeader {
@@ -100,7 +100,7 @@ impl IssuerProtectedHeader {
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct PresentationProtectedHeader {
-    alg: ProofAlgorithm,
+    alg: PresentationProofAlgorithm,
     /// ID for the key used for the JWP.
     #[serde(skip_serializing_if = "Option::is_none")]
     kid: Option<String>,
@@ -114,7 +114,7 @@ pub struct PresentationProtectedHeader {
 
 impl PresentationProtectedHeader {
 
-    pub fn new(alg: ProofAlgorithm) -> Self {
+    pub fn new(alg: PresentationProofAlgorithm) -> Self {
         Self {
             alg,
             kid: None,
@@ -125,7 +125,7 @@ impl PresentationProtectedHeader {
 
 
     // Getter for alg
-    pub fn alg(&self) -> ProofAlgorithm {
+    pub fn alg(&self) -> PresentationProofAlgorithm {
         self.alg
     }
 

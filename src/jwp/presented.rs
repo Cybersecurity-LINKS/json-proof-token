@@ -18,7 +18,7 @@ use json_unflattening::flattening::flatten;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::{jpt::{payloads::{Payloads, PayloadType}, claims::Claims}, errors::CustomError, encoding::{SerializationType, base64url_encode_serializable, base64url_encode, Base64UrlDecodedSerializable, base64url_decode}, jwk::key::Jwk, jpa::{algs::ProofAlgorithm, bbs_plus::BBSplusAlgorithm}};
+use crate::{jpt::{payloads::{Payloads, PayloadType}, claims::Claims}, errors::CustomError, encoding::{SerializationType, base64url_encode_serializable, base64url_encode, Base64UrlDecodedSerializable, base64url_decode}, jwk::key::Jwk, jpa::{algs::{ProofAlgorithm, PresentationProofAlgorithm}, bbs_plus::BBSplusAlgorithm}};
 
 use super::{header::{IssuerProtectedHeader, PresentationProtectedHeader}, issued::JwpIssued};
 
@@ -80,20 +80,18 @@ impl JwpPresentedBuilder {
     }
 
 
-    fn generate_proof(alg: ProofAlgorithm, key: &Jwk, issuer_proof: &[u8], issuer_header_oct: &[u8], presentation_header_oct: &[u8], payloads: &Payloads) -> Result<Vec<u8>, CustomError> {
+    fn generate_proof(alg: PresentationProofAlgorithm, key: &Jwk, issuer_proof: &[u8], issuer_header_oct: &[u8], presentation_header_oct: &[u8], payloads: &Payloads) -> Result<Vec<u8>, CustomError> {
         let proof = match alg {
-            ProofAlgorithm::BLS12381_SHA256_PROOF | ProofAlgorithm::BLS12381_SHAKE256_PROOF => {
+            PresentationProofAlgorithm::BLS12381_SHA256_PROOF | PresentationProofAlgorithm::BLS12381_SHAKE256_PROOF => {
                 BBSplusAlgorithm::generate_presentation_proof(alg, issuer_proof, payloads, key, issuer_header_oct, presentation_header_oct)?
             },
-            ProofAlgorithm::SU_ES256 => todo!(),
-            ProofAlgorithm::MAC_H256 => todo!(),
-            ProofAlgorithm::MAC_H384 => todo!(),
-            ProofAlgorithm::MAC_H512 => todo!(),
-            ProofAlgorithm::MAC_K25519 => todo!(),
-            ProofAlgorithm::MAC_K448 => todo!(),
-            ProofAlgorithm::MAC_H256K => todo!(),
-            ProofAlgorithm::BLS12381_SHA256  => panic!("This is valid only in issued JWPs"),
-            ProofAlgorithm::BLS12381_SHAKE256 => todo!("This is valid only in issued JWPs"),
+            PresentationProofAlgorithm::SU_ES256 => todo!(),
+            PresentationProofAlgorithm::MAC_H256 => todo!(),
+            PresentationProofAlgorithm::MAC_H384 => todo!(),
+            PresentationProofAlgorithm::MAC_H512 => todo!(),
+            PresentationProofAlgorithm::MAC_K25519 => todo!(),
+            PresentationProofAlgorithm::MAC_K448 => todo!(),
+            PresentationProofAlgorithm::MAC_H256K => todo!(),
         };
 
         Ok(proof)
@@ -171,20 +169,18 @@ impl JwpPresentedDecoder {
         &self.payloads
     }
 
-    fn verify_proof(alg: ProofAlgorithm, key: &Jwk, proof: &[u8], presentation_header_oct: &[u8], issuer_header_oct: &[u8], payloads: &Payloads) -> Result<(), CustomError> {
+    fn verify_proof(alg: PresentationProofAlgorithm, key: &Jwk, proof: &[u8], presentation_header_oct: &[u8], issuer_header_oct: &[u8], payloads: &Payloads) -> Result<(), CustomError> {
         let check = match alg {
-            ProofAlgorithm::BLS12381_SHA256_PROOF | ProofAlgorithm::BLS12381_SHAKE256_PROOF => {
+            PresentationProofAlgorithm::BLS12381_SHA256_PROOF | PresentationProofAlgorithm::BLS12381_SHAKE256_PROOF => {
                 BBSplusAlgorithm::verify_presentation_proof(alg,  &key, proof, presentation_header_oct, issuer_header_oct, payloads)
             },
-            ProofAlgorithm::SU_ES256 => todo!(),
-            ProofAlgorithm::MAC_H256 => todo!(),
-            ProofAlgorithm::MAC_H384 => todo!(),
-            ProofAlgorithm::MAC_H512 => todo!(),
-            ProofAlgorithm::MAC_K25519 => todo!(),
-            ProofAlgorithm::MAC_K448 => todo!(),
-            ProofAlgorithm::MAC_H256K => todo!(),
-            ProofAlgorithm::BLS12381_SHA256 => panic!("This is valid only in issued JWPs"),
-            ProofAlgorithm::BLS12381_SHAKE256 => panic!("This is valid only in issued JWPs"),
+            PresentationProofAlgorithm::SU_ES256 => todo!(),
+            PresentationProofAlgorithm::MAC_H256 => todo!(),
+            PresentationProofAlgorithm::MAC_H384 => todo!(),
+            PresentationProofAlgorithm::MAC_H512 => todo!(),
+            PresentationProofAlgorithm::MAC_K25519 => todo!(),
+            PresentationProofAlgorithm::MAC_K448 => todo!(),
+            PresentationProofAlgorithm::MAC_H256K => todo!(),
         };
 
         check
