@@ -71,17 +71,19 @@ impl Jwk {
         match key_type {
             KeyPairSubtype::BLS12381SHA256 => {
                 let keypair = KeyPair::<BBS_BLS12381_SHA256>::generate(None, None);
-                let pk = keypair.public_key().to_bytes();
+                let pk = keypair.public_key();
                 let sk = keypair.private_key().to_bytes();
-                let okp_params = JwkOctetKeyPairParameters::new(super::curves::EllipticCurveTypes::Bls12381G2, pk.to_vec(), Some(sk.to_vec()));
+                let (x,y) = pk.to_coordinates();
+                let okp_params = JwkOctetKeyPairParameters::new(super::curves::EllipticCurveTypes::Bls12381G2, x.as_ref(), y.as_ref(), Some(sk.as_ref()));
                 let jwk_params = JwkAlgorithmParameters::OctetKeyPair(okp_params);
                 Ok(Self{kid: None, pk_use: None, key_ops: None, alg: None, x5u: None, x5c: None, x5t: None, key_params: jwk_params })
             },
             KeyPairSubtype::BLS12381SHAKE256 => {
                 let keypair = KeyPair::<BBS_BLS12381_SHAKE256>::generate(None, None);
-                let pk = keypair.public_key().to_bytes();
+                let pk = keypair.public_key();
                 let sk = keypair.private_key().to_bytes();
-                let okp_params = JwkOctetKeyPairParameters::new(super::curves::EllipticCurveTypes::Bls12381G2, pk.to_vec(), Some(sk.to_vec()));
+                let (x,y) = pk.to_coordinates();
+                let okp_params = JwkOctetKeyPairParameters::new(super::curves::EllipticCurveTypes::Bls12381G2, x.as_ref(), y.as_ref(), Some(sk.as_ref()));
                 let jwk_params = JwkAlgorithmParameters::OctetKeyPair(okp_params);
                 Ok(Self{kid: None, pk_use: None, key_ops: None, alg: None, x5u: None, x5c: None, x5t: None, key_params: jwk_params })
             },

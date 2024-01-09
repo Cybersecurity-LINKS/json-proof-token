@@ -74,29 +74,42 @@ impl JwkAlgorithmParameters {
 
 
 
-/// For know thir implementation refers to this: https://www.rfc-editor.org/rfc/rfc8037.html
-/// But later could be changed to this: https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations-03
+/// Octect Key Pair representation of BLS keys
+/// 
+/// Barreto-Lynn-Scott Elliptic Curve Key Representations for JOSE and COSE
+/// [More Info](https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations-03)
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct JwkOctetKeyPairParameters {
     pub kty: KeyType, 
     /// The "crv" (curve) parameter identifies the cryptographic curve used
     /// with the key.
+    /// 
+    /// [More Info](https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations-03#curve-parameter-registration)
     pub crv: EllipticCurveTypes,
-    /// The "x" parameter contains the base64url encoded public key
-    pub x: String,
+    /// Represents the base64url encoded x coordinate of the curve point for the public key
+    ///
+    /// [More Info](https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations-03#section-2.2.1)
+    pub x: String, // Public Key's x-coordinate
+    /// Represents the base64url encoded y coordinate of the curve point for the public key
+    ///
+    /// [More Info](https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations-03#section-2.2.1)
+    pub y: String, // Public Key's y-coordinate
     /// The "d" parameter contains the base64url encoded private key
+    /// 
+    /// [More Info](https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations-03#section-2.2.1)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub d: Option<String>,
 }
 
 impl JwkOctetKeyPairParameters {
 
-    pub fn new<T: AsRef<[u8]>>(crv: EllipticCurveTypes, x: T, d: Option<T> ) -> Self{
+    pub fn new<T: AsRef<[u8]>>(crv: EllipticCurveTypes, x: T, y: T, d: Option<T> ) -> Self{
 
         Self{
             kty: KeyType::OctetKeyPair,
             crv: crv,
             x: base64url_encode(x),
+            y: base64url_encode(y),
             d: match d {
                 Some(d) => Some(base64url_encode(d)),
                 None => None
@@ -111,6 +124,7 @@ impl JwkOctetKeyPairParameters {
             kty: KeyType::OctetKeyPair,
             crv: self.crv.clone(),
             x: self.x.clone(),
+            y: self.y.clone(),
             d: None,
         }
     }
