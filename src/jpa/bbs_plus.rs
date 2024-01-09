@@ -39,9 +39,9 @@ impl BBSplusAlgorithm {
         if check_alg_curve_compatibility(Algorithm::Proof(alg.clone()), key_params.crv.clone()) == false {
             Err(CustomError::ProofGenerationError("key is not compatible".to_string()))
         } else {
-            let x: [u8; 96] = base64url_decode(&key_params.x).try_into().map_err(|_| CustomError::ProofGenerationError("key is not compatible".to_string()))?;
-            let y: [u8; 96] = base64url_decode(&key_params.y).try_into().map_err(|_| CustomError::ProofGenerationError("key is not compatible".to_string()))?;
-            let pk = BBSplusPublicKey::from_coordinates(&x, &y);
+            let dec_pk: [u8; 96] = base64url_decode(&key_params.x).try_into().map_err(|_| CustomError::ProofGenerationError("key is not compatible".to_string()))?;
+            
+            let pk = BBSplusPublicKey::from_bytes(&dec_pk);
             let sk = BBSplusSecretKey::from_bytes(&base64url_decode(key_params.d.as_ref().unwrap()));
             
             let proof = match alg {
@@ -81,9 +81,8 @@ impl BBSplusAlgorithm {
         if check_alg_curve_compatibility(Algorithm::Proof(alg.clone()), key_params.crv.clone()) == false {
             Err(CustomError::ProofGenerationError("key is not compatible".to_string()))
         } else {
-            let x: [u8; 96] = base64url_decode(&key_params.x).try_into().map_err(|_| CustomError::ProofGenerationError("key is not compatible".to_string()))?;
-            let y: [u8; 96] = base64url_decode(&key_params.y).try_into().map_err(|_| CustomError::ProofGenerationError("key is not compatible".to_string()))?;
-            let pk = BBSplusPublicKey::from_coordinates(&x, &y);
+            let dec_pk: [u8; 96] = base64url_decode(&key_params.x).try_into().map_err(|_| CustomError::ProofGenerationError("key is not compatible".to_string()))?;
+            let pk = BBSplusPublicKey::from_bytes(&dec_pk);
             let proof = BBSplusSignature::from_bytes(proof.try_into().unwrap()).unwrap();
             let check = match alg {
                 ProofAlgorithm::BLS12381_SHA256 => {
@@ -129,9 +128,8 @@ impl BBSplusAlgorithm {
         if check_presentation_alg_curve_compatibility(alg, key_params.crv.clone()) == false {
             Err(CustomError::ProofGenerationError("key is not compatible".to_string()))
         } else {
-            let x: [u8; 96] = base64url_decode(&key_params.x).try_into().map_err(|_| CustomError::ProofGenerationError("key is not compatible".to_string()))?;
-            let y: [u8; 96] = base64url_decode(&key_params.y).try_into().map_err(|_| CustomError::ProofGenerationError("key is not compatible".to_string()))?;
-            let pk = BBSplusPublicKey::from_coordinates(&x, &y);
+            let dec_pk: [u8; 96] = base64url_decode(&key_params.x).try_into().map_err(|_| CustomError::ProofGenerationError("key is not compatible".to_string()))?;
+            let pk = BBSplusPublicKey::from_bytes(&dec_pk);
             let revealed_message_indexes = payloads.get_disclosed_indexes();
             let signature = BBSplusSignature::from_bytes(signature.try_into().unwrap()).unwrap();
 
@@ -172,9 +170,8 @@ impl BBSplusAlgorithm {
         if check_presentation_alg_curve_compatibility(alg, key_params.crv.clone()) == false {
             Err(CustomError::ProofGenerationError("key is not compatible".to_string()))
         } else {
-            let x: [u8; 96] = base64url_decode(&key_params.x).try_into().map_err(|_| CustomError::ProofGenerationError("key is not compatible".to_string()))?;
-            let y: [u8; 96] = base64url_decode(&key_params.y).try_into().map_err(|_| CustomError::ProofGenerationError("key is not compatible".to_string()))?;
-            let pk = BBSplusPublicKey::from_coordinates(&x, &y);
+            let dec_pk: [u8; 96] = base64url_decode(&key_params.x).try_into().map_err(|_| CustomError::ProofGenerationError("key is not compatible".to_string()))?;
+            let pk = BBSplusPublicKey::from_bytes(&dec_pk);
             let disclosed_indexes = payloads.get_disclosed_indexes();
             let proof = BBSplusPoKSignature::from_bytes(proof.try_into().unwrap());
             let check = match alg {
