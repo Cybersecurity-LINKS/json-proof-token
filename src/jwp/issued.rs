@@ -210,12 +210,24 @@ impl JwpIssued {
         self.issuer_protected_header.claims()
     }
 
+    pub fn set_claims(&mut self, claims: Claims) {
+        self.issuer_protected_header.set_claims(Some(claims));
+    }
+
     pub fn get_payloads(&self) -> &Payloads {
         &self.payloads
     }
 
+    pub fn set_payloads(&mut self, payloads: Payloads) {
+        self.payloads = payloads;
+    }
+
     pub fn get_proof(&self) -> &[u8] {
         self.proof.as_ref()
+    }
+
+    pub fn set_proof(&mut self, proof: &[u8]) {
+        self.proof = proof.to_vec();
     }
   
 

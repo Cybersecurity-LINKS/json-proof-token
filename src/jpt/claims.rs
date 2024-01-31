@@ -129,6 +129,11 @@ impl JptClaims {
     }
 
 
+    pub fn update_claim_and_return_older(&mut self, claim: &str, value: Value) -> Option<Value> {
+        self.custom.insert(claim.to_owned(), value)
+    }
+
+
     /// Extracts claims and payloads into separate vectors.
     pub fn get_claims_and_payloads(&self) -> (Claims, Payloads){
 
