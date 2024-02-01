@@ -104,4 +104,10 @@ impl Payloads {
         });
 
     }
+
+    pub fn replace_payload_at_index(&mut self, index: usize, value: Value) -> Result<Value, CustomError> {
+        let dest = self.0.get_mut(index).ok_or(CustomError::IndexOutOfBounds)?;
+        let old = std::mem::replace(dest, (value, PayloadType::Disclosed));
+        Ok(old.0)
+    }
 }
