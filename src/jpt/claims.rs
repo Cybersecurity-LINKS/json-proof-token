@@ -27,6 +27,12 @@ use super::payloads::Payloads;
 #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Claims (pub Vec<String>);
 
+impl Claims {
+    pub fn get_claim_index(&self, name: String) -> Option<usize> {
+        self.0.iter().position(|x| *x == name)
+    }
+}
+
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
 pub struct CustomValue {

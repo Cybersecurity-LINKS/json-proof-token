@@ -15,6 +15,7 @@
 
 
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 
 use crate::{jpt::{payloads::{Payloads, PayloadType}, claims::{Claims, JptClaims}}, encoding::{base64url_encode, base64url_encode_serializable, SerializationType, Base64UrlDecodedSerializable, base64url_decode}, jwk::key::Jwk, jpa::{bbs_plus::BBSplusAlgorithm, algs::ProofAlgorithm}, errors::CustomError};
 
