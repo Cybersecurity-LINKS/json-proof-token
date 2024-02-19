@@ -87,8 +87,8 @@ impl BBSplusAlgorithm {
                         .iter()
                         .map(|p| {
                             BBSplusMessage::map_message_to_scalar_as_hash::<
-                                <BBS_BLS12381_SHA256 as Scheme>::Ciphersuite,
-                            >(&serde_json::to_vec(&p.0).unwrap(), None)
+                                BBS_BLS12381_SHA256
+                                >(&serde_json::to_vec(&p.0).unwrap(), None)
                         })
                         .collect();
                     Signature::<BBS_BLS12381_SHA256>::sign(
@@ -106,7 +106,7 @@ impl BBSplusAlgorithm {
                         .iter()
                         .map(|p| {
                             BBSplusMessage::map_message_to_scalar_as_hash::<
-                                <BBS_BLS12381_SHAKE256 as Scheme>::Ciphersuite,
+                                BBS_BLS12381_SHAKE256,
                             >(&serde_json::to_vec(&p.0).unwrap(), None)
                         })
                         .collect();
@@ -168,7 +168,7 @@ impl BBSplusAlgorithm {
                         .iter()
                         .map(|p| {
                             BBSplusMessage::map_message_to_scalar_as_hash::<
-                                <BBS_BLS12381_SHA256 as Scheme>::Ciphersuite,
+                                BBS_BLS12381_SHA256,
                             >(&serde_json::to_vec(&p.0).unwrap(), None)
                         })
                         .collect();
@@ -181,7 +181,7 @@ impl BBSplusAlgorithm {
                         .iter()
                         .map(|p| {
                             BBSplusMessage::map_message_to_scalar_as_hash::<
-                                <BBS_BLS12381_SHAKE256 as Scheme>::Ciphersuite,
+                                BBS_BLS12381_SHAKE256,
                             >(&serde_json::to_vec(&p.0).unwrap(), None)
                         })
                         .collect();
@@ -242,7 +242,7 @@ impl BBSplusAlgorithm {
                         .iter()
                         .map(|p| {
                             BBSplusMessage::map_message_to_scalar_as_hash::<
-                                <BBS_BLS12381_SHA256 as Scheme>::Ciphersuite,
+                                BBS_BLS12381_SHA256,
                             >(&serde_json::to_vec(&p.0).unwrap(), None)
                         })
                         .collect();
@@ -264,7 +264,7 @@ impl BBSplusAlgorithm {
                         .iter()
                         .map(|p| {
                             BBSplusMessage::map_message_to_scalar_as_hash::<
-                                <BBS_BLS12381_SHAKE256 as Scheme>::Ciphersuite,
+                                BBS_BLS12381_SHAKE256,
                             >(&serde_json::to_vec(&p.0).unwrap(), None)
                         })
                         .collect();
@@ -329,7 +329,7 @@ impl BBSplusAlgorithm {
                         .iter()
                         .map(|p| {
                             BBSplusMessage::map_message_to_scalar_as_hash::<
-                                <BBS_BLS12381_SHA256 as Scheme>::Ciphersuite,
+                                BBS_BLS12381_SHA256,
                             >(&serde_json::to_vec(p).unwrap(), None)
                         })
                         .collect();
@@ -349,7 +349,7 @@ impl BBSplusAlgorithm {
                         .iter()
                         .map(|p| {
                             BBSplusMessage::map_message_to_scalar_as_hash::<
-                                <BBS_BLS12381_SHAKE256 as Scheme>::Ciphersuite,
+                                BBS_BLS12381_SHAKE256,
                             >(&serde_json::to_vec(p).unwrap(), None)
                         })
                         .collect();
