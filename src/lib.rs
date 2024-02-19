@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+pub mod encoding;
+pub mod errors;
 pub mod jpa;
 pub mod jpt;
-pub mod jwp;
 pub mod jwk;
-pub mod errors;
-pub mod encoding;
+pub mod jwp;

@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-
+pub mod alg_parameters;
+pub mod curves;
 pub mod key;
 pub mod set;
 pub mod types;
-pub mod alg_parameters;
-pub mod curves;
 pub(crate) mod utils;

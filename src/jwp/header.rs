@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-
-
 use serde::{Deserialize, Serialize};
 
-use crate::{jpt::claims::Claims, jpa::algs::{ProofAlgorithm, PresentationProofAlgorithm}};
+use crate::{
+    jpa::algs::{PresentationProofAlgorithm, ProofAlgorithm},
+    jpt::claims::Claims,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct IssuerProtectedHeader {
@@ -31,25 +31,22 @@ pub struct IssuerProtectedHeader {
     kid: Option<String>,
     /// cid can be used similar to a cid in order to ensure externally resolve of claims. FOr now this is not handled!
     #[serde(skip_serializing_if = "Option::is_none")]
-    cid: Option<String>, 
+    cid: Option<String>,
     /// if you want you can put the claims directly into the header
     #[serde(skip_serializing_if = "Option::is_none")]
-    claims: Option<Claims>
+    claims: Option<Claims>,
 }
 
-
 impl IssuerProtectedHeader {
-
     pub fn new(alg: ProofAlgorithm) -> Self {
-        Self{
+        Self {
             typ: Some("JPT".to_owned()),
             alg,
             kid: None,
             cid: None,
-            claims: None
+            claims: None,
         }
     }
-
 
     // Getter for alg
     pub fn alg(&self) -> ProofAlgorithm {
@@ -97,7 +94,6 @@ impl IssuerProtectedHeader {
     }
 }
 
-
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct PresentationProtectedHeader {
     alg: PresentationProofAlgorithm,
@@ -109,11 +105,10 @@ pub struct PresentationProtectedHeader {
     aud: Option<String>,
     /// For replay attacks
     #[serde(skip_serializing_if = "Option::is_none")]
-    nonce: Option<String>
+    nonce: Option<String>,
 }
 
 impl PresentationProtectedHeader {
-
     pub fn new(alg: PresentationProofAlgorithm) -> Self {
         Self {
             alg,
@@ -122,7 +117,6 @@ impl PresentationProtectedHeader {
             nonce: None,
         }
     }
-
 
     // Getter for alg
     pub fn alg(&self) -> PresentationProofAlgorithm {
@@ -159,4 +153,3 @@ impl PresentationProtectedHeader {
         self.nonce = value;
     }
 }
-

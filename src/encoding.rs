@@ -12,34 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 use data_encoding::BASE64URL_NOPAD;
 use serde::{Deserialize, Serialize};
 
-
 pub enum SerializationType {
     COMPACT,
-    JSON
+    JSON,
 }
-
 
 pub fn base64url_encode<T: AsRef<[u8]>>(bytes: T) -> String {
     BASE64URL_NOPAD.encode(bytes.as_ref())
 }
 
-
 pub fn base64url_decode<T: AsRef<[u8]>>(bytes: T) -> Vec<u8> {
     BASE64URL_NOPAD.decode(bytes.as_ref()).unwrap()
 }
 
-
 // Encodes a struct in base64url
-pub fn base64url_encode_serializable<T: Serialize>(value: T) -> String{
+pub fn base64url_encode_serializable<T: Serialize>(value: T) -> String {
     let bytes = serde_json::to_vec(&value).unwrap();
     base64url_encode(bytes)
 }
-
-
 
 /// Decodes a base64url-encoded string and deserializes it into user-defined structs.
 ///
@@ -47,20 +40,20 @@ pub fn base64url_encode_serializable<T: Serialize>(value: T) -> String{
 /// 1. Decodes the input from base64 encoding.
 /// 2. Deserializes the resulting binary data into a user-provided struct.
 pub(crate) struct Base64UrlDecodedSerializable {
-    base64url_decoded: Vec<u8>
+    base64url_decoded: Vec<u8>,
 }
 
 impl Base64UrlDecodedSerializable {
     pub fn from_serializable_values(encoded_serializable_value: impl AsRef<[u8]>) -> Self {
-        Self { base64url_decoded: base64url_decode(encoded_serializable_value) }
+        Self {
+            base64url_decoded: base64url_decode(encoded_serializable_value),
+        }
     }
 
     pub fn deserialize<'a, T: Deserialize<'a>>(&'a self) -> T {
         serde_json::from_slice(&self.base64url_decoded).unwrap()
     }
 }
-
-
 
 pub struct EncondingKey {
     //TODO: family attribute implement something like this
@@ -71,6 +64,4 @@ pub struct EncondingKey {
 //TODO: implement From<Jwk> trait that transform a Jwk into and EncodingKey
 //es. if crv
 
-pub struct DecondingKey {
-
-}
+pub struct DecondingKey {}

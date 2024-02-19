@@ -12,15 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 use indexmap::IndexMap;
 use json_unflattening::flattening::flatten;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::{jpt::{payloads::{Payloads, PayloadType}, claims::Claims}, errors::CustomError, encoding::{SerializationType, base64url_encode_serializable, base64url_encode, Base64UrlDecodedSerializable, base64url_decode}, jwk::key::Jwk, jpa::{algs::{ProofAlgorithm, PresentationProofAlgorithm}, bbs_plus::BBSplusAlgorithm}};
+use crate::{
+    encoding::{
+        base64url_decode, base64url_encode, base64url_encode_serializable,
+        Base64UrlDecodedSerializable, SerializationType,
+    },
+    errors::CustomError,
+    jpa::{
+        algs::{PresentationProofAlgorithm, ProofAlgorithm},
+        bbs_plus::BBSplusAlgorithm,
+    },
+    jpt::{
+        claims::Claims,
+        payloads::{PayloadType, Payloads},
+    },
+    jwk::key::Jwk,
+};
 
-use super::{header::{IssuerProtectedHeader, PresentationProtectedHeader}, issued::JwpIssued};
+use super::{
+    header::{IssuerProtectedHeader, PresentationProtectedHeader},
+    issued::JwpIssued,
+};
 
 /// Takes the result of a rsplit and ensure we only get 4 parts (JwpPresented)
 /// Errors if we don't
@@ -28,13 +45,13 @@ macro_rules! expect_four {
     ($iter:expr) => {{
         let mut i = $iter;
         match (i.next(), i.next(), i.next(), i.next()) {
-            (Some(first), Some(second), Some(third), Some(fourth)) => (first, second, third, fourth),
+            (Some(first), Some(second), Some(third), Some(fourth)) => {
+                (first, second, third, fourth)
+            }
             _ => return Err(CustomError::InvalidPresentedJwp),
         }
     }};
 }
-
-
 
 /// Used to build a new JSON Web Proof in the Presentation form from an verified Issued JWP
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
@@ -47,44 +64,79 @@ pub struct JwpPresentedBuilder {
 
 impl JwpPresentedBuilder {
     pub fn new(issued_jwp: &JwpIssued) -> Self {
-        Self{ issuer_protected_header: issued_jwp.get_issuer_protected_header().clone(), 
-            presentation_protected_header: None, 
+        Self {
+            issuer_protected_header: issued_jwp.get_issuer_protected_header().clone(),
+            presentation_protected_header: None,
             payloads: issued_jwp.get_payloads().clone(),
             issuer_proof: issued_jwp.get_proof().to_vec(),
         }
     }
 
-    pub fn presentation_protected_header(&mut self, header: PresentationProtectedHeader) -> &mut Self {
+    pub fn presentation_protected_header(
+        &mut self,
+        header: PresentationProtectedHeader,
+    ) -> &mut Self {
         self.presentation_protected_header = Some(header);
         self
     }
 
     pub fn set_undisclosed(&mut self, claim: &str) -> Result<&mut Self, CustomError> {
-        let index = self.issuer_protected_header.claims().and_then(|c| c.0.iter().position(|x| x==claim)).ok_or(CustomError::SelectiveDisclosureError)?;
+        let index = self
+            .issuer_protected_header
+            .claims()
+            .and_then(|c| c.0.iter().position(|x| x == claim))
+            .ok_or(CustomError::SelectiveDisclosureError)?;
         self.payloads.set_undisclosed(index);
         Ok(self)
     }
 
-
     pub fn build(&self, jwk: &Jwk) -> Result<JwpPresented, CustomError> {
         if let Some(presentation_protected_header) = self.presentation_protected_header.clone() {
             let issuer_header_oct = serde_json::to_vec(&self.issuer_protected_header).unwrap();
-            let presentation_header_oct = serde_json::to_vec(&self.presentation_protected_header).unwrap();
-    
-            let proof = Self::generate_proof(presentation_protected_header.alg(), jwk, &self.issuer_proof, &issuer_header_oct, &presentation_header_oct, &self.payloads)?;
-            Ok(JwpPresented{ issuer_protected_header: self.issuer_protected_header.clone(), presentation_protected_header, payloads: self.payloads.clone(), proof })
-        } else {
-            Err(CustomError::IncompleteJwpBuild(crate::errors::IncompleteJwpBuild::NoIssuerHeader))
-        }
+            let presentation_header_oct =
+                serde_json::to_vec(&self.presentation_protected_header).unwrap();
 
+            let proof = Self::generate_proof(
+                presentation_protected_header.alg(),
+                jwk,
+                &self.issuer_proof,
+                &issuer_header_oct,
+                &presentation_header_oct,
+                &self.payloads,
+            )?;
+            Ok(JwpPresented {
+                issuer_protected_header: self.issuer_protected_header.clone(),
+                presentation_protected_header,
+                payloads: self.payloads.clone(),
+                proof,
+            })
+        } else {
+            Err(CustomError::IncompleteJwpBuild(
+                crate::errors::IncompleteJwpBuild::NoIssuerHeader,
+            ))
+        }
     }
 
-
-    fn generate_proof(alg: PresentationProofAlgorithm, key: &Jwk, issuer_proof: &[u8], issuer_header_oct: &[u8], presentation_header_oct: &[u8], payloads: &Payloads) -> Result<Vec<u8>, CustomError> {
+    fn generate_proof(
+        alg: PresentationProofAlgorithm,
+        key: &Jwk,
+        issuer_proof: &[u8],
+        issuer_header_oct: &[u8],
+        presentation_header_oct: &[u8],
+        payloads: &Payloads,
+    ) -> Result<Vec<u8>, CustomError> {
         let proof = match alg {
-            PresentationProofAlgorithm::BLS12381_SHA256_PROOF | PresentationProofAlgorithm::BLS12381_SHAKE256_PROOF => {
-                BBSplusAlgorithm::generate_presentation_proof(alg, issuer_proof, payloads, key, issuer_header_oct, presentation_header_oct)?
-            },
+            PresentationProofAlgorithm::BLS12381_SHA256_PROOF
+            | PresentationProofAlgorithm::BLS12381_SHAKE256_PROOF => {
+                BBSplusAlgorithm::generate_presentation_proof(
+                    alg,
+                    issuer_proof,
+                    payloads,
+                    key,
+                    issuer_header_oct,
+                    presentation_header_oct,
+                )?
+            }
             PresentationProofAlgorithm::SU_ES256 => todo!(),
             PresentationProofAlgorithm::MAC_H256 => todo!(),
             PresentationProofAlgorithm::MAC_H384 => todo!(),
@@ -96,12 +148,7 @@ impl JwpPresentedBuilder {
 
         Ok(proof)
     }
-
-
-    
 }
-
-
 
 /// Used for both decoding and verifing a JSON Proof Token representing a JWP in the Presentation form
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
@@ -117,17 +164,38 @@ impl JwpPresentedDecoder {
     pub fn decode(jpt: &str, serialization: SerializationType) -> Result<Self, CustomError> {
         match serialization {
             SerializationType::COMPACT => {
-                let (encoded_issuer_protected_header, encoded_presentation_protected_header, encoded_payloads, encoded_proof) = expect_four!(jpt.splitn(4, '.'));
+                let (
+                    encoded_issuer_protected_header,
+                    encoded_presentation_protected_header,
+                    encoded_payloads,
+                    encoded_proof,
+                ) = expect_four!(jpt.splitn(4, '.'));
                 //TODO: this needs to be checked because doesn't return an error if the value is not deserializable into an IssuerProtectedHeader struct
-                let presentation_protected_header: PresentationProtectedHeader = Base64UrlDecodedSerializable::from_serializable_values(encoded_presentation_protected_header).deserialize::<PresentationProtectedHeader>();
-                let issuer_protected_header: IssuerProtectedHeader = Base64UrlDecodedSerializable::from_serializable_values(encoded_issuer_protected_header).deserialize::<IssuerProtectedHeader>();
-                let payloads = Payloads(encoded_payloads.splitn(issuer_protected_header.claims().unwrap().0.len(), "~").map(|v| {
-                    if v == "" {
-                        (serde_json::Value::Null, PayloadType::Undisclosed)
-                    } else {
-                        (serde_json::from_slice(&base64url_decode(v)).unwrap(), PayloadType::Disclosed)
-                    }
-                }).collect());
+                let presentation_protected_header: PresentationProtectedHeader =
+                    Base64UrlDecodedSerializable::from_serializable_values(
+                        encoded_presentation_protected_header,
+                    )
+                    .deserialize::<PresentationProtectedHeader>();
+                let issuer_protected_header: IssuerProtectedHeader =
+                    Base64UrlDecodedSerializable::from_serializable_values(
+                        encoded_issuer_protected_header,
+                    )
+                    .deserialize::<IssuerProtectedHeader>();
+                let payloads = Payloads(
+                    encoded_payloads
+                        .splitn(issuer_protected_header.claims().unwrap().0.len(), "~")
+                        .map(|v| {
+                            if v == "" {
+                                (serde_json::Value::Null, PayloadType::Undisclosed)
+                            } else {
+                                (
+                                    serde_json::from_slice(&base64url_decode(v)).unwrap(),
+                                    PayloadType::Disclosed,
+                                )
+                            }
+                        })
+                        .collect(),
+                );
 
                 if !match issuer_protected_header.claims() {
                     Some(claims) => claims.0.len() == payloads.0.len(),
@@ -137,18 +205,31 @@ impl JwpPresentedDecoder {
                 }
 
                 let proof = base64url_decode(encoded_proof);
-                
-                Ok(Self{issuer_protected_header, payloads, proof: proof, presentation_protected_header})      
-            },
-            SerializationType::JSON => todo!()
+
+                Ok(Self {
+                    issuer_protected_header,
+                    payloads,
+                    proof: proof,
+                    presentation_protected_header,
+                })
+            }
+            SerializationType::JSON => todo!(),
         }
     }
 
     /// Verify the decoded JWP
     pub fn verify(&self, key: &Jwk) -> Result<JwpPresented, CustomError> {
         let issuer_header_oct = serde_json::to_vec(&self.issuer_protected_header).unwrap();
-        let presentation_header_oct = serde_json::to_vec(&self.presentation_protected_header).unwrap();
-        Self::verify_proof(self.presentation_protected_header.alg(), key, &self.proof, &presentation_header_oct, &issuer_header_oct, &self.payloads)?;
+        let presentation_header_oct =
+            serde_json::to_vec(&self.presentation_protected_header).unwrap();
+        Self::verify_proof(
+            self.presentation_protected_header.alg(),
+            key,
+            &self.proof,
+            &presentation_header_oct,
+            &issuer_header_oct,
+            &self.payloads,
+        )?;
         Ok(JwpPresented {
             issuer_protected_header: self.issuer_protected_header.clone(),
             presentation_protected_header: self.presentation_protected_header.clone(),
@@ -169,11 +250,26 @@ impl JwpPresentedDecoder {
         &self.payloads
     }
 
-    fn verify_proof(alg: PresentationProofAlgorithm, key: &Jwk, proof: &[u8], presentation_header_oct: &[u8], issuer_header_oct: &[u8], payloads: &Payloads) -> Result<(), CustomError> {
+    fn verify_proof(
+        alg: PresentationProofAlgorithm,
+        key: &Jwk,
+        proof: &[u8],
+        presentation_header_oct: &[u8],
+        issuer_header_oct: &[u8],
+        payloads: &Payloads,
+    ) -> Result<(), CustomError> {
         let check = match alg {
-            PresentationProofAlgorithm::BLS12381_SHA256_PROOF | PresentationProofAlgorithm::BLS12381_SHAKE256_PROOF => {
-                BBSplusAlgorithm::verify_presentation_proof(alg,  &key, proof, presentation_header_oct, issuer_header_oct, payloads)
-            },
+            PresentationProofAlgorithm::BLS12381_SHA256_PROOF
+            | PresentationProofAlgorithm::BLS12381_SHAKE256_PROOF => {
+                BBSplusAlgorithm::verify_presentation_proof(
+                    alg,
+                    &key,
+                    proof,
+                    presentation_header_oct,
+                    issuer_header_oct,
+                    payloads,
+                )
+            }
             PresentationProofAlgorithm::SU_ES256 => todo!(),
             PresentationProofAlgorithm::MAC_H256 => todo!(),
             PresentationProofAlgorithm::MAC_H384 => todo!(),
@@ -187,29 +283,33 @@ impl JwpPresentedDecoder {
     }
 }
 
-
-
 /// Decoded and verified JSON Web Proof in the Presentation form
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct JwpPresented {
     issuer_protected_header: IssuerProtectedHeader,
     presentation_protected_header: PresentationProtectedHeader,
     payloads: Payloads,
-    proof: Vec<u8>
+    proof: Vec<u8>,
 }
 
 impl JwpPresented {
-
     /// Encode the currently crafted JWP
     pub fn encode(&self, serialization: SerializationType) -> Result<String, CustomError> {
         // let encoded_issuer_header = base64url_encode_serializable(&self.issuer_protected_header);
         // let encoded_presentation_header = base64url_encode_serializable(&self.presentation_protected_header);
 
         let issuer_header_oct = serde_json::to_vec(&self.issuer_protected_header).unwrap();
-        let presentation_header_oct = serde_json::to_vec(&self.presentation_protected_header).unwrap();
-        
-        let jwp = Self::serialize(serialization, &presentation_header_oct, &issuer_header_oct, &self.payloads, &self.proof);
-        
+        let presentation_header_oct =
+            serde_json::to_vec(&self.presentation_protected_header).unwrap();
+
+        let jwp = Self::serialize(
+            serialization,
+            &presentation_header_oct,
+            &issuer_header_oct,
+            &self.payloads,
+            &self.proof,
+        );
+
         Ok(jwp)
     }
 
@@ -221,7 +321,7 @@ impl JwpPresented {
         &self.presentation_protected_header
     }
 
-    pub fn get_claims(&self) -> Option<&Claims>{
+    pub fn get_claims(&self) -> Option<&Claims> {
         self.issuer_protected_header.claims()
     }
 
@@ -233,25 +333,39 @@ impl JwpPresented {
         &self.proof
     }
 
-    fn serialize(serialization: SerializationType, presentation_header_oct: &[u8], issuer_header_oct: &[u8], payloads: &Payloads, proof: &[u8]) -> String {
+    fn serialize(
+        serialization: SerializationType,
+        presentation_header_oct: &[u8],
+        issuer_header_oct: &[u8],
+        payloads: &Payloads,
+        proof: &[u8],
+    ) -> String {
         let encoded_issuer_header = base64url_encode(issuer_header_oct);
         let encoded_presentation_header = base64url_encode(presentation_header_oct);
         let encoded_proof = base64url_encode(proof);
-        
+
         let jwp = match serialization {
             SerializationType::COMPACT => {
-                let encoded_payloads = payloads.0.iter().map(|p| {
-                    if p.1 == PayloadType::Undisclosed {
-                        "".to_string()
-                    } else {
-                        base64url_encode_serializable(&p.0)
-                    }
-                })
-                .collect::<Vec<String>>()
-                .join("~");
-                format!("{}.{}.{}.{}", encoded_issuer_header, encoded_presentation_header, encoded_payloads, encoded_proof)
-                
-            },
+                let encoded_payloads = payloads
+                    .0
+                    .iter()
+                    .map(|p| {
+                        if p.1 == PayloadType::Undisclosed {
+                            "".to_string()
+                        } else {
+                            base64url_encode_serializable(&p.0)
+                        }
+                    })
+                    .collect::<Vec<String>>()
+                    .join("~");
+                format!(
+                    "{}.{}.{}.{}",
+                    encoded_issuer_header,
+                    encoded_presentation_header,
+                    encoded_payloads,
+                    encoded_proof
+                )
+            }
             SerializationType::JSON => todo!(),
         };
 

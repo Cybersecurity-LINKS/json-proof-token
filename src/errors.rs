@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -48,13 +47,11 @@ pub enum CustomError {
     FlatteningError,
 
     #[error("Error during selective disclosure of an attribute")]
-    SelectiveDisclosureError
+    SelectiveDisclosureError,
 }
-
 
 #[derive(Error, Debug)]
 pub enum IncompleteJwpBuild {
-
     #[error("Issuer Header Not set!")]
     NoIssuerHeader,
 
@@ -65,6 +62,5 @@ pub enum IncompleteJwpBuild {
     NoClaimsAndPayloads,
 
     #[error("JWK Not set! Cannot generate a JWP!")]
-    NoJwk
-
+    NoJwk,
 }

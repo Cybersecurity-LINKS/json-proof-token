@@ -12,27 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-
-use crate::jpa::algs::{ProofAlgorithm, PresentationProofAlgorithm};
 use super::alg_parameters::Algorithm;
 use super::curves::EllipticCurveTypes;
+use crate::jpa::algs::{PresentationProofAlgorithm, ProofAlgorithm};
 
 pub fn check_alg_curve_compatibility(alg: Algorithm, crv: EllipticCurveTypes) -> bool {
     match (alg, crv) {
         // (Algorithm::Signature(SignatureAlgorithm::ES256), EllipticCurveTypes::P256) => true, EXAMPLE
         (Algorithm::Proof(ProofAlgorithm::BLS12381_SHA256), EllipticCurveTypes::Bls12381G2) => true,
-        (Algorithm::Proof(ProofAlgorithm::BLS12381_SHAKE256), EllipticCurveTypes::Bls12381G2) => true,
-        _ => false
-      }
+        (Algorithm::Proof(ProofAlgorithm::BLS12381_SHAKE256), EllipticCurveTypes::Bls12381G2) => {
+            true
+        }
+        _ => false,
+    }
 }
 
-
-pub fn check_presentation_alg_curve_compatibility(alg: PresentationProofAlgorithm, crv: EllipticCurveTypes) -> bool {
-  match (alg, crv) {
-      // (Algorithm::Signature(SignatureAlgorithm::ES256), EllipticCurveTypes::P256) => true, EXAMPLE
-      (PresentationProofAlgorithm::BLS12381_SHA256_PROOF, EllipticCurveTypes::Bls12381G2) => true,
-      (PresentationProofAlgorithm::BLS12381_SHAKE256_PROOF, EllipticCurveTypes::Bls12381G2) => true,
-      _ => false
+pub fn check_presentation_alg_curve_compatibility(
+    alg: PresentationProofAlgorithm,
+    crv: EllipticCurveTypes,
+) -> bool {
+    match (alg, crv) {
+        // (Algorithm::Signature(SignatureAlgorithm::ES256), EllipticCurveTypes::P256) => true, EXAMPLE
+        (PresentationProofAlgorithm::BLS12381_SHA256_PROOF, EllipticCurveTypes::Bls12381G2) => true,
+        (PresentationProofAlgorithm::BLS12381_SHAKE256_PROOF, EllipticCurveTypes::Bls12381G2) => {
+            true
+        }
+        _ => false,
     }
 }

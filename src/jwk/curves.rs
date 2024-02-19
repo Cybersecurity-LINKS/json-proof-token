@@ -12,11 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-
-
-use std::{fmt, str::FromStr};
 use serde::{Deserialize, Serialize};
+use std::{fmt, str::FromStr};
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum EllipticCurveTypes {
@@ -26,7 +23,7 @@ pub enum EllipticCurveTypes {
     P384,
     #[serde(rename = "P-521")]
     P521,
-    Ed25519,	
+    Ed25519,
     Ed448,
     X25519,
     X448,
@@ -34,8 +31,7 @@ pub enum EllipticCurveTypes {
     Secp256K1,
 
     #[serde(rename = "Bls12381G2")]
-    Bls12381G2
-
+    Bls12381G2,
 }
 
 impl FromStr for EllipticCurveTypes {
@@ -56,7 +52,6 @@ impl FromStr for EllipticCurveTypes {
         }
     }
 }
-
 
 impl fmt::Display for EllipticCurveTypes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

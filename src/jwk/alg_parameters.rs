@@ -12,21 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-
-use std::fmt;
+use crate::{encoding::base64url_encode, jpa::algs::ProofAlgorithm};
 use serde::{Deserialize, Serialize};
-use crate::{jpa::algs::ProofAlgorithm, encoding::base64url_encode};
+use std::fmt;
 
-use super::{types::KeyType, curves::EllipticCurveTypes};
+use super::{curves::EllipticCurveTypes, types::KeyType};
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum Algorithm {
     Proof(ProofAlgorithm),
-
     // These are defined in the JWA rfc
-    
+
     // Signature(SignatureAlgorithm), https://datatracker.ietf.org/doc/html/rfc7518#section-3
     // KeyManagement(KeyManagementAlgorithm), https://datatracker.ietf.org/doc/html/rfc7518#section-4
     // Encryption(EncryptionAlgorithm), https://datatracker.ietf.org/doc/html/rfc7518#section-5
@@ -44,7 +41,7 @@ impl fmt::Display for Algorithm {
 #[serde(untagged)]
 pub enum JwkAlgorithmParameters {
     // TODO: to be done
-    
+
     // EllipticCurve(JwkEllipticCurveKeyParameters),
     // RSA(JwkRSAKeyParameters),
     // OctetKey(JwkOctetKeyParameters),
@@ -54,10 +51,9 @@ pub enum JwkAlgorithmParameters {
 impl JwkAlgorithmParameters {
     pub fn to_public(&self) -> Option<Self> {
         match self {
-          Self::OctetKeyPair(inner) => Some(Self::OctetKeyPair(inner.to_public())),
+            Self::OctetKeyPair(inner) => Some(Self::OctetKeyPair(inner.to_public())),
         }
     }
-    
 
     pub fn is_public(&self) -> bool {
         match self {
@@ -72,19 +68,17 @@ impl JwkAlgorithmParameters {
     }
 }
 
-
-
 /// Octect Key Pair representation of BLS keys
-/// 
+///
 /// For now using this representation https://www.rfc-editor.org/rfc/rfc8037
-/// 
+///
 /// Maybe in future change to [this](https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations-03)
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct JwkOctetKeyPairParameters {
-    pub kty: KeyType, 
+    pub kty: KeyType,
     /// The "crv" (curve) parameter identifies the cryptographic curve used
     /// with the key.
-    /// 
+    ///
     /// [More Info](https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations-03#curve-parameter-registration)
     pub crv: EllipticCurveTypes,
     /// Represents the base64url encoded public key
@@ -92,26 +86,23 @@ pub struct JwkOctetKeyPairParameters {
     /// [More Info](https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations-03#section-2.2.1)
     pub x: String, // Public Key
     /// The "d" parameter contains the base64url encoded private key
-    /// 
+    ///
     /// [More Info](https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations-03#section-2.2.1)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub d: Option<String>,
 }
 
 impl JwkOctetKeyPairParameters {
-
-    pub fn new<T: AsRef<[u8]>>(crv: EllipticCurveTypes, x: T, d: Option<T> ) -> Self{
-
-        Self{
+    pub fn new<T: AsRef<[u8]>>(crv: EllipticCurveTypes, x: T, d: Option<T>) -> Self {
+        Self {
             kty: KeyType::OctetKeyPair,
             crv: crv,
             x: base64url_encode(x),
             d: match d {
                 Some(d) => Some(base64url_encode(d)),
-                None => None
-            }
+                None => None,
+            },
         }
-
     }
 
     /// Returns a clone without private key.
@@ -135,19 +126,16 @@ impl JwkOctetKeyPairParameters {
     }
 }
 
-
-
-
 // /// Octect Key Pair representation of BLS keys
-// /// 
+// ///
 // /// Barreto-Lynn-Scott Elliptic Curve Key Representations for JOSE and COSE
 // /// [More Info](https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations-03)
 // #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 // pub struct JwkOctetKeyPairParameters {
-//     pub kty: KeyType, 
+//     pub kty: KeyType,
 //     /// The "crv" (curve) parameter identifies the cryptographic curve used
 //     /// with the key.
-//     /// 
+//     ///
 //     /// [More Info](https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations-03#curve-parameter-registration)
 //     pub crv: EllipticCurveTypes,
 //     /// Represents the base64url encoded x coordinate of the curve point for the public key
@@ -159,7 +147,7 @@ impl JwkOctetKeyPairParameters {
 //     /// [More Info](https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations-03#section-2.2.1)
 //     pub y: String, // Public Key's y-coordinate
 //     /// The "d" parameter contains the base64url encoded private key
-//     /// 
+//     ///
 //     /// [More Info](https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations-03#section-2.2.1)
 //     #[serde(skip_serializing_if = "Option::is_none")]
 //     pub d: Option<String>,

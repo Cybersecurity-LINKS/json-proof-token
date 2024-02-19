@@ -12,24 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-
-use serde::{Deserialize, Serialize};
-use serde_json::{Value, Map};
 use crate::errors::CustomError;
+use serde::{Deserialize, Serialize};
+use serde_json::{Map, Value};
 
-///TODO: Not clear what to do with this information 
+///TODO: Not clear what to do with this information
 /// (https://datatracker.ietf.org/doc/html/draft-ietf-jose-json-proof-token#name-payloads)
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub enum PayloadType{
+pub enum PayloadType {
     Disclosed,
     Undisclosed,
-    ProofMethods
+    ProofMethods,
 }
 
-
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct Payloads (pub Vec<(Value, PayloadType)>);
+pub struct Payloads(pub Vec<(Value, PayloadType)>);
 
 impl Payloads {
     pub fn new_from_values(values: Vec<Value>) -> Self {
@@ -40,7 +37,7 @@ impl Payloads {
         Payloads(payloads)
     }
 
-    pub fn get_values(&self) -> Vec<Value>{
+    pub fn get_values(&self) -> Vec<Value> {
         self.0.clone().into_iter().map(|v| v.0).collect()
     }
 
@@ -68,11 +65,11 @@ impl Payloads {
         disclosed_indexes
     }
 
-
     pub fn get_undisclosed_payloads(&self) -> Vec<Value> {
         let undisclosed_indexes = self.get_undisclosed_indexes();
 
-        let undisclosed_payloads: Vec<Value> = self.0
+        let undisclosed_payloads: Vec<Value> = self
+            .0
             .iter()
             .enumerate()
             .filter(|(index, _)| undisclosed_indexes.contains(index))
@@ -85,7 +82,8 @@ impl Payloads {
     pub fn get_disclosed_payloads(&self) -> Vec<Value> {
         let disclosed_indexes = self.get_disclosed_indexes();
 
-        let disclosed_payloads: Vec<Value> = self.0
+        let disclosed_payloads: Vec<Value> = self
+            .0
             .iter()
             .enumerate()
             .filter(|(index, _)| disclosed_indexes.contains(index))
@@ -95,17 +93,19 @@ impl Payloads {
         disclosed_payloads
     }
 
-    pub fn set_undisclosed(&mut self, index: usize){
-
+    pub fn set_undisclosed(&mut self, index: usize) {
         self.0.iter_mut().enumerate().for_each(|(i, v)| {
             if index == i {
                 v.1 = PayloadType::Undisclosed;
             }
         });
-
     }
 
-    pub fn replace_payload_at_index(&mut self, index: usize, value: Value) -> Result<Value, CustomError> {
+    pub fn replace_payload_at_index(
+        &mut self,
+        index: usize,
+        value: Value,
+    ) -> Result<Value, CustomError> {
         let dest = self.0.get_mut(index).ok_or(CustomError::IndexOutOfBounds)?;
         let old = std::mem::replace(dest, (value, PayloadType::Disclosed));
         Ok(old.0)

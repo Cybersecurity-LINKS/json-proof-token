@@ -12,16 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-
-use crate::{jwk::alg_parameters::JwkOctetKeyPairParameters, errors::CustomError};
+use crate::{errors::CustomError, jwk::alg_parameters::JwkOctetKeyPairParameters};
 use serde::{Deserialize, Serialize};
-use zkryptium::{schemes::algorithms::{BBS_BLS12381_SHA256, BBS_BLS12381_SHAKE256}, keys::pair::KeyPair};
+use zkryptium::{
+    keys::pair::KeyPair,
+    schemes::algorithms::{BBS_BLS12381_SHA256, BBS_BLS12381_SHAKE256},
+};
 
-
-use super::{alg_parameters::{JwkAlgorithmParameters, Algorithm}, types::KeyPairSubtype};
-
-
+use super::{
+    alg_parameters::{Algorithm, JwkAlgorithmParameters},
+    types::KeyPairSubtype,
+};
 
 /// JWK parameters defined at https://datatracker.ietf.org/doc/html/rfc7517#section-4
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
@@ -35,7 +36,7 @@ pub struct Jwk {
     pub pk_use: Option<PKUse>,
 
     /// The "key_ops" (key operations) parameter identifies the operation(s) for which the key is intended to be used
-    
+
     /// The "use" and "key_ops" JWK members SHOULD NOT be used together;
     /// however, if both are used, the information they convey MUST be
     /// consistent.  Applications should specify which of these members they
@@ -47,7 +48,7 @@ pub struct Jwk {
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub alg: Option<Algorithm>,
 
-    /// X.509 Public key cerfificate URL. 
+    /// X.509 Public key cerfificate URL.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub x5u: Option<String>,
 
@@ -62,29 +63,53 @@ pub struct Jwk {
     //Key parameters based on the algorithm
     #[serde(flatten)]
     pub key_params: JwkAlgorithmParameters,
-    
 }
 
 impl Jwk {
-
-    pub fn generate(key_type: KeyPairSubtype) -> Result<Self, CustomError>{
+    pub fn generate(key_type: KeyPairSubtype) -> Result<Self, CustomError> {
         match key_type {
             KeyPairSubtype::BLS12381SHA256 => {
                 let keypair = KeyPair::<BBS_BLS12381_SHA256>::generate(None, None);
                 let pk = keypair.public_key().to_bytes();
                 let sk = keypair.private_key().to_bytes();
-                let okp_params = JwkOctetKeyPairParameters::new(super::curves::EllipticCurveTypes::Bls12381G2, pk.as_ref(), Some(sk.as_ref()));
+                let okp_params = JwkOctetKeyPairParameters::new(
+                    super::curves::EllipticCurveTypes::Bls12381G2,
+                    pk.as_ref(),
+                    Some(sk.as_ref()),
+                );
                 let jwk_params = JwkAlgorithmParameters::OctetKeyPair(okp_params);
-                Ok(Self{kid: None, pk_use: None, key_ops: None, alg: None, x5u: None, x5c: None, x5t: None, key_params: jwk_params })
-            },
+                Ok(Self {
+                    kid: None,
+                    pk_use: None,
+                    key_ops: None,
+                    alg: None,
+                    x5u: None,
+                    x5c: None,
+                    x5t: None,
+                    key_params: jwk_params,
+                })
+            }
             KeyPairSubtype::BLS12381SHAKE256 => {
                 let keypair = KeyPair::<BBS_BLS12381_SHAKE256>::generate(None, None);
                 let pk = keypair.public_key().to_bytes();
                 let sk = keypair.private_key().to_bytes();
-                let okp_params = JwkOctetKeyPairParameters::new(super::curves::EllipticCurveTypes::Bls12381G2, pk.as_ref(), Some(sk.as_ref()));
+                let okp_params = JwkOctetKeyPairParameters::new(
+                    super::curves::EllipticCurveTypes::Bls12381G2,
+                    pk.as_ref(),
+                    Some(sk.as_ref()),
+                );
                 let jwk_params = JwkAlgorithmParameters::OctetKeyPair(okp_params);
-                Ok(Self{kid: None, pk_use: None, key_ops: None, alg: None, x5u: None, x5c: None, x5t: None, key_params: jwk_params })
-            },
+                Ok(Self {
+                    kid: None,
+                    pk_use: None,
+                    key_ops: None,
+                    alg: None,
+                    x5u: None,
+                    x5c: None,
+                    x5t: None,
+                    key_params: jwk_params,
+                })
+            }
         }
     }
 
@@ -128,7 +153,7 @@ impl Jwk {
 
     pub fn from_key_params(key_params: JwkAlgorithmParameters) -> Self {
         let params: JwkAlgorithmParameters = key_params.into();
-        Self{
+        Self {
             kid: None,
             pk_use: None,
             key_ops: None,
@@ -142,7 +167,7 @@ impl Jwk {
 
     pub fn to_public(&self) -> Option<Jwk> {
         let mut public: Jwk = Jwk::from_key_params(self.key_params.to_public()?);
-    
+
         if let Some(value) = &self.kid {
             public.set_kid(value);
         }
@@ -150,11 +175,11 @@ impl Jwk {
         if let Some(value) = self.pk_use {
             public.set_pk_use(value);
         }
-    
+
         if let Some(value) = &self.key_ops {
             public.set_key_ops(value.iter().map(|op| op.inverse()).collect());
         }
-    
+
         if let Some(value) = self.alg {
             public.set_alg(value);
         }
@@ -170,38 +195,38 @@ impl Jwk {
         if let Some(value) = &self.x5t {
             public.set_x5t(value);
         }
-    
+
         Some(public)
-      }
-    
+    }
 }
 
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, serde::Deserialize, serde::Serialize)]
+#[derive(
+    Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, serde::Deserialize, serde::Serialize,
+)]
 #[serde(rename_all = "camelCase")]
 pub enum KeyOps {
-  /// Compute digital signature or MAC.
-  Sign,
-  /// Verify digital signature or MAC.
-  Verify,
-  /// Encrypt content.
-  Encrypt,
-  /// Decrypt content and validate decryption, if applicable.
-  Decrypt,
-  /// Encrypt key.
-  WrapKey,
-  /// Decrypt key and validate decryption, if applicable.
-  UnwrapKey,
-  /// Derive key.
-  DeriveKey,
-  /// Derive bits not to be used as a key.
-  DeriveBits,
+    /// Compute digital signature or MAC.
+    Sign,
+    /// Verify digital signature or MAC.
+    Verify,
+    /// Encrypt content.
+    Encrypt,
+    /// Decrypt content and validate decryption, if applicable.
+    Decrypt,
+    /// Encrypt key.
+    WrapKey,
+    /// Decrypt key and validate decryption, if applicable.
+    UnwrapKey,
+    /// Derive key.
+    DeriveKey,
+    /// Derive bits not to be used as a key.
+    DeriveBits,
 
-  /// Generate a proof
-  ProofGeneration,
-  ///Verify a proof
-  ProofVerification
+    /// Generate a proof
+    ProofGeneration,
+    ///Verify a proof
+    ProofVerification,
 }
-
 
 impl KeyOps {
     pub const fn inverse(&self) -> Self {
@@ -217,9 +242,8 @@ impl KeyOps {
             Self::ProofGeneration => Self::ProofVerification,
             Self::ProofVerification => Self::ProofVerification,
         }
-      }
+    }
 }
-
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub enum PKUse {
@@ -228,6 +252,5 @@ pub enum PKUse {
     #[serde(rename = "enc")]
     Encryption,
     #[serde(rename = "proof")]
-    Proof
+    Proof,
 }
-

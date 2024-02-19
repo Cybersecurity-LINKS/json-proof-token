@@ -12,12 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-
 use std::str::FromStr;
 
-use serde::{Serialize, Deserialize};
-
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Copy, Clone)]
 pub enum KeyType {
@@ -33,12 +30,10 @@ pub enum KeyType {
 
 #[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Copy, Clone)]
 
-
 pub enum KeyPairSubtype {
     BLS12381SHA256,
-    BLS12381SHAKE256
+    BLS12381SHAKE256,
 }
-
 
 impl FromStr for KeyPairSubtype {
     type Err = ();
@@ -51,5 +46,3 @@ impl FromStr for KeyPairSubtype {
         }
     }
 }
-
-

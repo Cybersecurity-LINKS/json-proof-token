@@ -135,7 +135,7 @@ Add this to your Cargo.toml:
 
 ```
 [dependencies]
-json-proof-token = "0.3.2"
+json-proof-token = "0.3.3"
 ```
 
 ### Example
