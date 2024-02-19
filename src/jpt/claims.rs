@@ -17,7 +17,7 @@ use std::iter::zip;
 use indexmap::IndexMap;
 use json_unflattening::{flattening::flatten, unflattening::unflatten};
 use serde::{Deserialize, Serialize};
-use serde_json::{json, value::Index, Map, Value};
+use serde_json::{json, Map, Value};
 
 use super::payloads::Payloads;
 

@@ -20,7 +20,7 @@ use zkryptium::{
         signature::BBSplusSignature,
     },
     schemes::{
-        algorithms::{Scheme, BBS_BLS12381_SHA256, BBS_BLS12381_SHAKE256},
+        algorithms::{BBS_BLS12381_SHA256, BBS_BLS12381_SHAKE256},
         generics::{PoKSignature, Signature},
     },
     utils::message::BBSplusMessage,
@@ -57,12 +57,11 @@ impl BBSplusAlgorithm {
                     ));
                 }
                 params
-            }
-            _ => {
-                return Err(CustomError::ProofGenerationError(
-                    "key is not compatible".to_string(),
-                ))
-            }
+            } // _ => {
+              //     return Err(CustomError::ProofGenerationError(
+              //         "key is not compatible".to_string(),
+              //     ))
+              // }
         };
 
         if check_alg_curve_compatibility(Algorithm::Proof(alg.clone()), key_params.crv.clone())
@@ -86,9 +85,10 @@ impl BBSplusAlgorithm {
                         .0
                         .iter()
                         .map(|p| {
-                            BBSplusMessage::map_message_to_scalar_as_hash::<
-                                BBS_BLS12381_SHA256
-                                >(&serde_json::to_vec(&p.0).unwrap(), None)
+                            BBSplusMessage::map_message_to_scalar_as_hash::<BBS_BLS12381_SHA256>(
+                                &serde_json::to_vec(&p.0).unwrap(),
+                                None,
+                            )
                         })
                         .collect();
                     Signature::<BBS_BLS12381_SHA256>::sign(
@@ -105,9 +105,10 @@ impl BBSplusAlgorithm {
                         .0
                         .iter()
                         .map(|p| {
-                            BBSplusMessage::map_message_to_scalar_as_hash::<
-                                BBS_BLS12381_SHAKE256,
-                            >(&serde_json::to_vec(&p.0).unwrap(), None)
+                            BBSplusMessage::map_message_to_scalar_as_hash::<BBS_BLS12381_SHAKE256>(
+                                &serde_json::to_vec(&p.0).unwrap(),
+                                None,
+                            )
                         })
                         .collect();
                     Signature::<BBS_BLS12381_SHAKE256>::sign(
@@ -141,12 +142,11 @@ impl BBSplusAlgorithm {
                     ));
                 }
                 params
-            }
-            _ => {
-                return Err(CustomError::ProofGenerationError(
-                    "key is not compatible".to_string(),
-                ))
-            }
+            } // _ => {
+              //     return Err(CustomError::ProofGenerationError(
+              //         "key is not compatible".to_string(),
+              //     ))
+              // }
         };
 
         if check_alg_curve_compatibility(Algorithm::Proof(alg.clone()), key_params.crv.clone())
@@ -167,9 +167,10 @@ impl BBSplusAlgorithm {
                         .0
                         .iter()
                         .map(|p| {
-                            BBSplusMessage::map_message_to_scalar_as_hash::<
-                                BBS_BLS12381_SHA256,
-                            >(&serde_json::to_vec(&p.0).unwrap(), None)
+                            BBSplusMessage::map_message_to_scalar_as_hash::<BBS_BLS12381_SHA256>(
+                                &serde_json::to_vec(&p.0).unwrap(),
+                                None,
+                            )
                         })
                         .collect();
                     let proof = Signature::<BBS_BLS12381_SHA256>::BBSplus(proof);
@@ -180,9 +181,10 @@ impl BBSplusAlgorithm {
                         .0
                         .iter()
                         .map(|p| {
-                            BBSplusMessage::map_message_to_scalar_as_hash::<
-                                BBS_BLS12381_SHAKE256,
-                            >(&serde_json::to_vec(&p.0).unwrap(), None)
+                            BBSplusMessage::map_message_to_scalar_as_hash::<BBS_BLS12381_SHAKE256>(
+                                &serde_json::to_vec(&p.0).unwrap(),
+                                None,
+                            )
                         })
                         .collect();
 
@@ -215,12 +217,11 @@ impl BBSplusAlgorithm {
                     ));
                 }
                 params
-            }
-            _ => {
-                return Err(CustomError::ProofGenerationError(
-                    "key is not compatible".to_string(),
-                ))
-            }
+            } // _ => {
+              //     return Err(CustomError::ProofGenerationError(
+              //         "key is not compatible".to_string(),
+              //     ))
+              // }
         };
 
         if check_presentation_alg_curve_compatibility(alg, key_params.crv.clone()) == false {
@@ -241,9 +242,10 @@ impl BBSplusAlgorithm {
                         .0
                         .iter()
                         .map(|p| {
-                            BBSplusMessage::map_message_to_scalar_as_hash::<
-                                BBS_BLS12381_SHA256,
-                            >(&serde_json::to_vec(&p.0).unwrap(), None)
+                            BBSplusMessage::map_message_to_scalar_as_hash::<BBS_BLS12381_SHA256>(
+                                &serde_json::to_vec(&p.0).unwrap(),
+                                None,
+                            )
                         })
                         .collect();
                     PoKSignature::<BBS_BLS12381_SHA256>::proof_gen(
@@ -263,9 +265,10 @@ impl BBSplusAlgorithm {
                         .0
                         .iter()
                         .map(|p| {
-                            BBSplusMessage::map_message_to_scalar_as_hash::<
-                                BBS_BLS12381_SHAKE256,
-                            >(&serde_json::to_vec(&p.0).unwrap(), None)
+                            BBSplusMessage::map_message_to_scalar_as_hash::<BBS_BLS12381_SHAKE256>(
+                                &serde_json::to_vec(&p.0).unwrap(),
+                                None,
+                            )
                         })
                         .collect();
                     PoKSignature::<BBS_BLS12381_SHAKE256>::proof_gen(
@@ -303,12 +306,11 @@ impl BBSplusAlgorithm {
                     ));
                 }
                 params
-            }
-            _ => {
-                return Err(CustomError::ProofGenerationError(
-                    "key is not compatible".to_string(),
-                ))
-            }
+            } // _ => {
+              //     return Err(CustomError::ProofGenerationError(
+              //         "key is not compatible".to_string(),
+              //     ))
+              // }
         };
 
         if check_presentation_alg_curve_compatibility(alg, key_params.crv.clone()) == false {
@@ -328,9 +330,10 @@ impl BBSplusAlgorithm {
                         .get_disclosed_payloads()
                         .iter()
                         .map(|p| {
-                            BBSplusMessage::map_message_to_scalar_as_hash::<
-                                BBS_BLS12381_SHA256,
-                            >(&serde_json::to_vec(p).unwrap(), None)
+                            BBSplusMessage::map_message_to_scalar_as_hash::<BBS_BLS12381_SHA256>(
+                                &serde_json::to_vec(p).unwrap(),
+                                None,
+                            )
                         })
                         .collect();
                     let proof = PoKSignature::<BBS_BLS12381_SHA256>::BBSplus(proof);
@@ -348,9 +351,10 @@ impl BBSplusAlgorithm {
                         .get_disclosed_payloads()
                         .iter()
                         .map(|p| {
-                            BBSplusMessage::map_message_to_scalar_as_hash::<
-                                BBS_BLS12381_SHAKE256,
-                            >(&serde_json::to_vec(p).unwrap(), None)
+                            BBSplusMessage::map_message_to_scalar_as_hash::<BBS_BLS12381_SHAKE256>(
+                                &serde_json::to_vec(p).unwrap(),
+                                None,
+                            )
                         })
                         .collect();
 

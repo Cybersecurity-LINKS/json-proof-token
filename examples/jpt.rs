@@ -12,21 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::HashMap;
-
 use jsonprooftoken::{
-    encoding::{base64url_encode, SerializationType},
+    encoding::SerializationType,
     jpa::algs::ProofAlgorithm,
     jpt::claims::JptClaims,
-    jwk::{alg_parameters::JwkAlgorithmParameters, key::Jwk, types::KeyPairSubtype},
+    jwk::{key::Jwk, types::KeyPairSubtype},
     jwp::{
         header::{IssuerProtectedHeader, PresentationProtectedHeader},
-        issued::{JwpIssued, JwpIssuedBuilder, JwpIssuedDecoder},
-        presented::{JwpPresented, JwpPresentedBuilder, JwpPresentedDecoder},
+        issued::{JwpIssuedBuilder, JwpIssuedDecoder},
+        presented::{JwpPresentedBuilder, JwpPresentedDecoder},
     },
 };
-use serde::Serialize;
-use serde_json::{json, Value};
 
 fn main() {
     let custom_claims = serde_json::json!({

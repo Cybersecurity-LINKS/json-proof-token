@@ -12,10 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use indexmap::IndexMap;
-use json_unflattening::flattening::flatten;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 use crate::{
     encoding::{
@@ -23,10 +20,7 @@ use crate::{
         Base64UrlDecodedSerializable, SerializationType,
     },
     errors::CustomError,
-    jpa::{
-        algs::{PresentationProofAlgorithm, ProofAlgorithm},
-        bbs_plus::BBSplusAlgorithm,
-    },
+    jpa::{algs::PresentationProofAlgorithm, bbs_plus::BBSplusAlgorithm},
     jpt::{
         claims::Claims,
         payloads::{PayloadType, Payloads},

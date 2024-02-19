@@ -14,7 +14,7 @@
 
 use crate::errors::CustomError;
 use serde::{Deserialize, Serialize};
-use serde_json::{Map, Value};
+use serde_json::Value;
 
 ///TODO: Not clear what to do with this information
 /// (https://datatracker.ietf.org/doc/html/draft-ietf-jose-json-proof-token#name-payloads)
