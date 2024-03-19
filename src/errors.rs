@@ -56,7 +56,7 @@ pub enum CustomError {
     InvalidJwk,
 
     #[error("Curve is not supported")]
-    CurveNotSupported
+    CurveNotSupported,
 }
 
 #[derive(Error, Debug)]

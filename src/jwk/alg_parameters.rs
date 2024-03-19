@@ -125,7 +125,6 @@ impl JwkOctetKeyPairParameters {
     }
 }
 
-
 /// EC representation of BLS keys
 ///
 /// Barreto-Lynn-Scott Elliptic Curve Key Representations for JOSE and COSE
@@ -154,20 +153,17 @@ pub struct JwkEllipticCurveKeyParameters {
 }
 
 impl JwkEllipticCurveKeyParameters {
-
-    pub fn new(crv: EllipticCurveTypes, x: &[u8], y: &[u8], d: Option<&[u8]> ) -> Self{
-
-        Self{
+    pub fn new(crv: EllipticCurveTypes, x: &[u8], y: &[u8], d: Option<&[u8]>) -> Self {
+        Self {
             kty: KeyType::EllipticCurve,
             crv: crv,
             x: base64url_encode(x),
             y: base64url_encode(y),
             d: match d {
                 Some(d) => Some(base64url_encode(d)),
-                None => None
-            }
+                None => None,
+            },
         }
-
     }
 
     /// Returns a clone without private key.

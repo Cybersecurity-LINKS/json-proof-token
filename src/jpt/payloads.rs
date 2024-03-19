@@ -29,14 +29,15 @@ pub enum PayloadType {
 pub struct Payloads(pub Vec<(Value, PayloadType)>);
 
 impl Payloads {
-
     pub fn to_bytes(&self) -> Result<Vec<Vec<u8>>, CustomError> {
-        let p: Result<Vec<Vec<u8>>, CustomError> = self.0.iter().map(|v| {
-            match serde_json::to_vec(&v.0) {
+        let p: Result<Vec<Vec<u8>>, CustomError> = self
+            .0
+            .iter()
+            .map(|v| match serde_json::to_vec(&v.0) {
                 Ok(vec) => Ok(vec),
                 Err(_) => Err(CustomError::SerializationError),
-            }
-        }).collect();
+            })
+            .collect();
         p
     }
     pub fn new_from_values(values: Vec<Value>) -> Self {

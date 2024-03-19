@@ -56,7 +56,7 @@ impl BBSplusAlgorithm {
                     ));
                 }
                 params
-            },
+            }
             _ => {
                 return Err(CustomError::ProofGenerationError(
                     "key is not compatible".to_string(),
@@ -71,39 +71,38 @@ impl BBSplusAlgorithm {
                 "key is not compatible".to_string(),
             ))
         } else {
-            let x: [u8; 96]  = base64url_decode(&key_params.x).try_into().map_err(|_| {
-                CustomError::InvalidJwk
-            })?;
-            let y: [u8; 96] = base64url_decode(&key_params.y).try_into().map_err(|_| {
-                CustomError::InvalidJwk
-            })?;
+            let x: [u8; 96] = base64url_decode(&key_params.x)
+                .try_into()
+                .map_err(|_| CustomError::InvalidJwk)?;
+            let y: [u8; 96] = base64url_decode(&key_params.y)
+                .try_into()
+                .map_err(|_| CustomError::InvalidJwk)?;
 
-            let pk = BBSplusPublicKey::from_coordinates(&x, &y).map_err(|_| {
-                CustomError::InvalidJwk
-            })?;
+            let pk =
+                BBSplusPublicKey::from_coordinates(&x, &y).map_err(|_| CustomError::InvalidJwk)?;
 
-            let sk =
-                BBSplusSecretKey::from_bytes(&base64url_decode(key_params.d.as_ref().ok_or(CustomError::InvalidJwk)?)).map_err(|_| CustomError::SerializationError)?;
+            let sk = BBSplusSecretKey::from_bytes(&base64url_decode(
+                key_params.d.as_ref().ok_or(CustomError::InvalidJwk)?,
+            ))
+            .map_err(|_| CustomError::SerializationError)?;
 
             let proof = match alg {
-                ProofAlgorithm::BLS12381_SHA256 => {
-                    Signature::<BbsBls12381Sha256>::sign(
-                        Some(&payloads.to_bytes()?),
-                        &sk,
-                        &pk,
-                        Some(issuer_header),
-                    ).map_err(|e| CustomError::ProofGenerationError(e.to_string()))?
-                    .to_bytes()
-                }
-                ProofAlgorithm::BLS12381_SHAKE256 => {
-                    Signature::<BbsBls12381Shake256>::sign(
-                        Some(&payloads.to_bytes()?),
-                        &sk,
-                        &pk,
-                        Some(issuer_header),
-                    ).map_err(|e| CustomError::ProofGenerationError(e.to_string()))?
-                    .to_bytes()
-                }
+                ProofAlgorithm::BLS12381_SHA256 => Signature::<BbsBls12381Sha256>::sign(
+                    Some(&payloads.to_bytes()?),
+                    &sk,
+                    &pk,
+                    Some(issuer_header),
+                )
+                .map_err(|e| CustomError::ProofGenerationError(e.to_string()))?
+                .to_bytes(),
+                ProofAlgorithm::BLS12381_SHAKE256 => Signature::<BbsBls12381Shake256>::sign(
+                    Some(&payloads.to_bytes()?),
+                    &sk,
+                    &pk,
+                    Some(issuer_header),
+                )
+                .map_err(|e| CustomError::ProofGenerationError(e.to_string()))?
+                .to_bytes(),
                 _ => unreachable!(),
             };
 
@@ -126,7 +125,7 @@ impl BBSplusAlgorithm {
                     ));
                 }
                 params
-            },
+            }
             _ => {
                 return Err(CustomError::ProofGenerationError(
                     "key is not compatible".to_string(),
@@ -141,17 +140,19 @@ impl BBSplusAlgorithm {
                 "key is not compatible".to_string(),
             ))
         } else {
-            let x: [u8; 96]  = base64url_decode(&key_params.x).try_into().map_err(|_| {
-                CustomError::InvalidJwk
-            })?;
-            let y: [u8; 96] = base64url_decode(&key_params.y).try_into().map_err(|_| {
-                CustomError::InvalidJwk
-            })?;
+            let x: [u8; 96] = base64url_decode(&key_params.x)
+                .try_into()
+                .map_err(|_| CustomError::InvalidJwk)?;
+            let y: [u8; 96] = base64url_decode(&key_params.y)
+                .try_into()
+                .map_err(|_| CustomError::InvalidJwk)?;
 
-            let pk = BBSplusPublicKey::from_coordinates(&x, &y).map_err(|_| {
-                CustomError::InvalidJwk
-            })?;
-            let proof = BBSplusSignature::from_bytes(proof.try_into().map_err(|_| CustomError::ProofVerificationError("Proof is not valid".to_owned()))?).map_err(|_| CustomError::SerializationError)?;
+            let pk =
+                BBSplusPublicKey::from_coordinates(&x, &y).map_err(|_| CustomError::InvalidJwk)?;
+            let proof = BBSplusSignature::from_bytes(proof.try_into().map_err(|_| {
+                CustomError::ProofVerificationError("Proof is not valid".to_owned())
+            })?)
+            .map_err(|_| CustomError::SerializationError)?;
             let check = match alg {
                 ProofAlgorithm::BLS12381_SHA256 => {
                     let proof = Signature::<BbsBls12381Sha256>::BBSplus(proof);
@@ -184,7 +185,7 @@ impl BBSplusAlgorithm {
                     ));
                 }
                 params
-            },
+            }
             _ => {
                 return Err(CustomError::ProofGenerationError(
                     "key is not compatible".to_string(),
@@ -197,16 +198,15 @@ impl BBSplusAlgorithm {
                 "key is not compatible".to_string(),
             ))
         } else {
-            let x: [u8; 96]  = base64url_decode(&key_params.x).try_into().map_err(|_| {
-                CustomError::InvalidJwk
-            })?;
-            let y: [u8; 96] = base64url_decode(&key_params.y).try_into().map_err(|_| {
-                CustomError::InvalidJwk
-            })?;
+            let x: [u8; 96] = base64url_decode(&key_params.x)
+                .try_into()
+                .map_err(|_| CustomError::InvalidJwk)?;
+            let y: [u8; 96] = base64url_decode(&key_params.y)
+                .try_into()
+                .map_err(|_| CustomError::InvalidJwk)?;
 
-            let pk = BBSplusPublicKey::from_coordinates(&x, &y).map_err(|_| {
-                CustomError::InvalidJwk
-            })?;
+            let pk =
+                BBSplusPublicKey::from_coordinates(&x, &y).map_err(|_| CustomError::InvalidJwk)?;
             let revealed_message_indexes = payloads.get_disclosed_indexes();
             let proof = match alg {
                 PresentationProofAlgorithm::BLS12381_SHA256_PROOF => {
@@ -217,7 +217,8 @@ impl BBSplusAlgorithm {
                         Some(presentation_header),
                         Some(&payloads.to_bytes()?),
                         Some(&revealed_message_indexes),
-                    ).map_err(|e| CustomError::ProofGenerationError(e.to_string()))?
+                    )
+                    .map_err(|e| CustomError::ProofGenerationError(e.to_string()))?
                     .to_bytes()
                 }
                 PresentationProofAlgorithm::BLS12381_SHAKE256_PROOF => {
@@ -228,7 +229,8 @@ impl BBSplusAlgorithm {
                         Some(presentation_header),
                         Some(&payloads.to_bytes()?),
                         Some(&revealed_message_indexes),
-                    ).map_err(|e| CustomError::ProofGenerationError(e.to_string()))?
+                    )
+                    .map_err(|e| CustomError::ProofGenerationError(e.to_string()))?
                     .to_bytes()
                 }
                 _ => unreachable!(),
@@ -254,7 +256,7 @@ impl BBSplusAlgorithm {
                     ));
                 }
                 params
-            },
+            }
             _ => {
                 return Err(CustomError::ProofGenerationError(
                     "key is not compatible".to_string(),
@@ -267,18 +269,20 @@ impl BBSplusAlgorithm {
                 "key is not compatible".to_string(),
             ))
         } else {
-            let x: [u8; 96]  = base64url_decode(&key_params.x).try_into().map_err(|_| {
-                CustomError::InvalidJwk
-            })?;
-            let y: [u8; 96] = base64url_decode(&key_params.y).try_into().map_err(|_| {
-                CustomError::InvalidJwk
-            })?;
+            let x: [u8; 96] = base64url_decode(&key_params.x)
+                .try_into()
+                .map_err(|_| CustomError::InvalidJwk)?;
+            let y: [u8; 96] = base64url_decode(&key_params.y)
+                .try_into()
+                .map_err(|_| CustomError::InvalidJwk)?;
 
-            let pk = BBSplusPublicKey::from_coordinates(&x, &y).map_err(|_| {
-                CustomError::InvalidJwk
-            })?;
+            let pk =
+                BBSplusPublicKey::from_coordinates(&x, &y).map_err(|_| CustomError::InvalidJwk)?;
             let disclosed_indexes = payloads.get_disclosed_indexes();
-            let proof = BBSplusPoKSignature::from_bytes(proof.try_into().map_err(|_| CustomError::ProofVerificationError("Proof is not valid".to_owned()))?).map_err(|_| CustomError::InvalidJwk)?;
+            let proof = BBSplusPoKSignature::from_bytes(proof.try_into().map_err(|_| {
+                CustomError::ProofVerificationError("Proof is not valid".to_owned())
+            })?)
+            .map_err(|_| CustomError::InvalidJwk)?;
             let check = match alg {
                 PresentationProofAlgorithm::BLS12381_SHA256_PROOF => {
                     let proof = PoKSignature::<BbsBls12381Sha256>::BBSplus(proof);
