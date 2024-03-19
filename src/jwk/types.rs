@@ -31,8 +31,8 @@ pub enum KeyType {
 #[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Copy, Clone)]
 
 pub enum KeyPairSubtype {
-    BLS12381SHA256,
-    BLS12381SHAKE256,
+    BLS12381G2Sha256,
+    BLS12381G2Shake256,
 }
 
 impl FromStr for KeyPairSubtype {
@@ -40,8 +40,8 @@ impl FromStr for KeyPairSubtype {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "bls12381sha256" => Ok(KeyPairSubtype::BLS12381SHA256),
-            "bls12381shake256" => Ok(KeyPairSubtype::BLS12381SHAKE256),
+            "bls12381sha256" => Ok(KeyPairSubtype::BLS12381G2Sha256),
+            "bls12381shake256" => Ok(KeyPairSubtype::BLS12381G2Shake256),
             _ => Err(()),
         }
     }

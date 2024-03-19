@@ -49,11 +49,14 @@ pub enum CustomError {
     #[error("Error during selective disclosure of an attribute")]
     SelectiveDisclosureError,
 
-    #[error("Serialization Failed")]
+    #[error("Serialization failed")]
     SerializationError,
 
     #[error("Invalid JWK")]
-    InvalidJwk
+    InvalidJwk,
+
+    #[error("Curve is not supported")]
+    CurveNotSupported
 }
 
 #[derive(Error, Debug)]

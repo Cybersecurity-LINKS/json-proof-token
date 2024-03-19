@@ -24,6 +24,8 @@ The specification work for this can be found [here](https://github.com/json-web-
 
 JWK is defined in [RFC 7517](https://tools.ietf.org/html/rfc7517).
 
+> **NOTE**: To represent **BLS** keys this implementation refers to [draft-ietf-cose-bls-key-representations-05](https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations-05).
+
 JWKs are currently used in the proof generation and verification of JWPs.
 
 The tables below represent which `kty` and `crv` are supported at momement.
@@ -33,12 +35,10 @@ The tables below represent which `kty` and `crv` are supported at momement.
 | Key Type | Support |
 |:--------:|:-------:|
 |   `OKP`  |    ✔    |
-|   `EC`   |    ✘    |
+|   `EC`   |    ✔    |
 |   `RSA`  |    ✘    |
 |   `oct`  |    ✘    |
 
-
->NOTE: Currently, the `OKP` implementation makes reference to [RFC 8037](https://datatracker.ietf.org/doc/html/rfc8037), but it may later be updated to point to the [draft](https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations) from the COSE WG, in order to support also BLS Elliptic Curve Keys (used in [BBS+](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures)).
 
 #### JWK Elliptic Curve
 The standard list of Elliptic Curves can be found [here](https://www.iana.org/assignments/jose/jose.xhtml#web-key-elliptic-curve):
@@ -55,14 +55,14 @@ The standard list of Elliptic Curves can be found [here](https://www.iana.org/as
 |   `X448`  |    ✘    |
 
 
-This list is made from the currenlty active draft mentioned before, in [section 2.2.3](https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations#section-2.2.3).
+This list is made from the currenlty active draft [Barreto-Lynn-Scott Elliptic Curve Key Representations for JOSE and COSE - v05](https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations-05#section-2.2.3).
 
 |  Curve Name | Support |
 |:---------:|:-------:|
-|  `Bls12381G2` |    ✔    |
-|  `Bls12381G1` |    ✘    |
-|  `Bls48581G2` |    ✘    |
-|  `Bls48581G2` |    ✘    |
+|  `BLS12381G2` |    ✔    |
+|  `BLS12381G1` |    ✘    |
+|  `BLS48581G2` |    ✘    |
+|  `BLS48581G2` |    ✘    |
 
 ### JSON Web Proof Algorithms
 
@@ -121,7 +121,7 @@ These are defined [here](https://datatracker.ietf.org/doc/html/draft-ietf-jose-j
 
 
 ## Getting Started
-<!-- What are the steps required to install your project? Provide a step-by-step description of how to get the development environment running. -->
+
 
 ### Requirements
 
@@ -135,7 +135,7 @@ Add this to your Cargo.toml:
 
 ```
 [dependencies]
-json-proof-token = "0.3.3"
+json-proof-token = "0.3.4"
 ```
 
 ### Example

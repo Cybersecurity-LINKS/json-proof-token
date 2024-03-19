@@ -43,7 +43,7 @@ fn main() {
 
     let issued_header = IssuerProtectedHeader::new(ProofAlgorithm::BLS12381_SHA256);
 
-    let bbs_jwk = Jwk::generate(KeyPairSubtype::BLS12381SHA256).unwrap();
+    let bbs_jwk = Jwk::generate(KeyPairSubtype::BLS12381G2Sha256).unwrap();
     println!(
         "\nBBS Jwk:\n {:#}",
         serde_json::to_string_pretty(&bbs_jwk).unwrap()

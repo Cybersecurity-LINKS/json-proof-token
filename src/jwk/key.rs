@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{errors::CustomError, jwk::alg_parameters::JwkOctetKeyPairParameters};
+use crate::errors::CustomError;
 use serde::{Deserialize, Serialize};
 use zkryptium::{
     keys::pair::KeyPair,
@@ -20,7 +20,7 @@ use zkryptium::{
 };
 
 use super::{
-    alg_parameters::{Algorithm, JwkAlgorithmParameters},
+    alg_parameters::{Algorithm, JwkAlgorithmParameters, JwkEllipticCurveKeyParameters},
     types::KeyPairSubtype,
 };
 
@@ -73,16 +73,18 @@ impl Jwk {
         let ikm = generate_random_secret(Self::N);
 
         match key_type {
-            KeyPairSubtype::BLS12381SHA256 => {
+            KeyPairSubtype::BLS12381G2Sha256 => {
                 let keypair = KeyPair::<BbsBls12381Sha256>::generate(&ikm, None, None).map_err(|_| CustomError::JwkGenerationError("Keygen failed".to_owned()))?;
-                let pk = keypair.public_key().to_bytes();
+                let pk = keypair.public_key();
+                let (x, y) = pk.to_coordinates();
                 let sk = keypair.private_key().to_bytes();
-                let okp_params = JwkOctetKeyPairParameters::new(
-                    super::curves::EllipticCurveTypes::Bls12381G2,
-                    pk.as_ref(),
-                    Some(sk.as_ref()),
+                let okp_params = JwkEllipticCurveKeyParameters::new(
+                    super::curves::EllipticCurveTypes::BLS12381G2,
+                    &x,
+                    &y,
+                    Some(&sk),
                 );
-                let jwk_params = JwkAlgorithmParameters::OctetKeyPair(okp_params);
+                let jwk_params = JwkAlgorithmParameters::EllipticCurve(okp_params);
                 Ok(Self {
                     kid: None,
                     pk_use: None,
@@ -94,16 +96,18 @@ impl Jwk {
                     key_params: jwk_params,
                 })
             }
-            KeyPairSubtype::BLS12381SHAKE256 => {
+            KeyPairSubtype::BLS12381G2Shake256 => {
                 let keypair = KeyPair::<BbsBls12381Shake256>::generate(&ikm, None, None).map_err(|_| CustomError::JwkGenerationError("Keygen failed".to_owned()))?;
-                let pk = keypair.public_key().to_bytes();
+                let pk = keypair.public_key();
+                let (x, y) = pk.to_coordinates();
                 let sk = keypair.private_key().to_bytes();
-                let okp_params = JwkOctetKeyPairParameters::new(
-                    super::curves::EllipticCurveTypes::Bls12381G2,
-                    pk.as_ref(),
-                    Some(sk.as_ref()),
+                let okp_params = JwkEllipticCurveKeyParameters::new(
+                    super::curves::EllipticCurveTypes::BLS12381G2,
+                    &x,
+                    &y,
+                    Some(&sk),
                 );
-                let jwk_params = JwkAlgorithmParameters::OctetKeyPair(okp_params);
+                let jwk_params = JwkAlgorithmParameters::EllipticCurve(okp_params);
                 Ok(Self {
                     kid: None,
                     pk_use: None,
