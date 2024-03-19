@@ -29,6 +29,16 @@ pub enum PayloadType {
 pub struct Payloads(pub Vec<(Value, PayloadType)>);
 
 impl Payloads {
+
+    pub fn to_bytes(&self) -> Result<Vec<Vec<u8>>, CustomError> {
+        let p: Result<Vec<Vec<u8>>, CustomError> = self.0.iter().map(|v| {
+            match serde_json::to_vec(&v.0) {
+                Ok(vec) => Ok(vec),
+                Err(_) => Err(CustomError::SerializationError),
+            }
+        }).collect();
+        p
+    }
     pub fn new_from_values(values: Vec<Value>) -> Self {
         let mut payloads = Vec::new();
         for value in values {
@@ -79,18 +89,18 @@ impl Payloads {
         undisclosed_payloads
     }
 
-    pub fn get_disclosed_payloads(&self) -> Vec<Value> {
+    pub fn get_disclosed_payloads(&self) -> Payloads {
         let disclosed_indexes = self.get_disclosed_indexes();
 
-        let disclosed_payloads: Vec<Value> = self
+        let disclosed_payloads: Vec<(Value, PayloadType)> = self
             .0
             .iter()
             .enumerate()
             .filter(|(index, _)| disclosed_indexes.contains(index))
-            .map(|(_, payload)| payload.0.clone())
+            .map(|(_, payload)| payload.clone())
             .collect();
 
-        disclosed_payloads
+        Payloads(disclosed_payloads)
     }
 
     pub fn set_undisclosed(&mut self, index: usize) {

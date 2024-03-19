@@ -17,7 +17,7 @@ serde_json = {version = "1.0.59", features = ["preserve_order"]}
 data-encoding = "2.4.0"
 indexmap = {version = "2.0.2", features = ["serde"]}
 thiserror = "1.0.57"
-zkryptium = {version = "0.1.9", default-features = false, features = ["bbsplus"]}
+zkryptium = {version = "0.2.0", default-features = false, features = ["bbsplus"]}
 cargo-license = "0.5.1"
 json-unflattening = "0.1.2"
 

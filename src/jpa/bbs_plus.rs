@@ -20,10 +20,9 @@ use zkryptium::{
         signature::BBSplusSignature,
     },
     schemes::{
-        algorithms::{BBS_BLS12381_SHA256, BBS_BLS12381_SHAKE256},
+        algorithms::{BbsBls12381Sha256, BbsBls12381Shake256},
         generics::{PoKSignature, Signature},
     },
-    utils::message::BBSplusMessage,
 };
 
 use crate::{
@@ -75,49 +74,27 @@ impl BBSplusAlgorithm {
                 CustomError::ProofGenerationError("key is not compatible".to_string())
             })?;
 
-            let pk = BBSplusPublicKey::from_bytes(&dec_pk);
+            let pk = BBSplusPublicKey::from_bytes(&dec_pk).map_err(|_| CustomError::SerializationError)?;
             let sk =
-                BBSplusSecretKey::from_bytes(&base64url_decode(key_params.d.as_ref().unwrap()));
+                BBSplusSecretKey::from_bytes(&base64url_decode(key_params.d.as_ref().ok_or(CustomError::InvalidJwk)?)).map_err(|_| CustomError::SerializationError)?;
 
             let proof = match alg {
                 ProofAlgorithm::BLS12381_SHA256 => {
-                    let messages: Vec<BBSplusMessage> = payloads
-                        .0
-                        .iter()
-                        .map(|p| {
-                            BBSplusMessage::map_message_to_scalar_as_hash::<BBS_BLS12381_SHA256>(
-                                &serde_json::to_vec(&p.0).unwrap(),
-                                None,
-                            )
-                        })
-                        .collect();
-                    Signature::<BBS_BLS12381_SHA256>::sign(
-                        Some(&messages),
+                    Signature::<BbsBls12381Sha256>::sign(
+                        Some(&payloads.to_bytes()?),
                         &sk,
                         &pk,
-                        None,
                         Some(issuer_header),
-                    )
+                    ).map_err(|e| CustomError::ProofGenerationError(e.to_string()))?
                     .to_bytes()
                 }
                 ProofAlgorithm::BLS12381_SHAKE256 => {
-                    let messages: Vec<BBSplusMessage> = payloads
-                        .0
-                        .iter()
-                        .map(|p| {
-                            BBSplusMessage::map_message_to_scalar_as_hash::<BBS_BLS12381_SHAKE256>(
-                                &serde_json::to_vec(&p.0).unwrap(),
-                                None,
-                            )
-                        })
-                        .collect();
-                    Signature::<BBS_BLS12381_SHAKE256>::sign(
-                        Some(&messages),
+                    Signature::<BbsBls12381Shake256>::sign(
+                        Some(&payloads.to_bytes()?),
                         &sk,
                         &pk,
-                        None,
                         Some(issuer_header),
-                    )
+                    ).map_err(|e| CustomError::ProofGenerationError(e.to_string()))?
                     .to_bytes()
                 }
                 _ => unreachable!(),
@@ -159,45 +136,21 @@ impl BBSplusAlgorithm {
             let dec_pk: [u8; 96] = base64url_decode(&key_params.x).try_into().map_err(|_| {
                 CustomError::ProofGenerationError("key is not compatible".to_string())
             })?;
-            let pk = BBSplusPublicKey::from_bytes(&dec_pk);
-            let proof = BBSplusSignature::from_bytes(proof.try_into().unwrap()).unwrap();
+            let pk = BBSplusPublicKey::from_bytes(&dec_pk).map_err(|_| CustomError::InvalidJwk)?;
+            let proof = BBSplusSignature::from_bytes(proof.try_into().map_err(|_| CustomError::InvalidJwk)?).map_err(|_| CustomError::SerializationError)?;
             let check = match alg {
                 ProofAlgorithm::BLS12381_SHA256 => {
-                    let messages: Vec<BBSplusMessage> = payloads
-                        .0
-                        .iter()
-                        .map(|p| {
-                            BBSplusMessage::map_message_to_scalar_as_hash::<BBS_BLS12381_SHA256>(
-                                &serde_json::to_vec(&p.0).unwrap(),
-                                None,
-                            )
-                        })
-                        .collect();
-                    let proof = Signature::<BBS_BLS12381_SHA256>::BBSplus(proof);
-                    proof.verify(&pk, Some(&messages), None, Some(issuer_header))
+                    let proof = Signature::<BbsBls12381Sha256>::BBSplus(proof);
+                    proof.verify(&pk, Some(&payloads.to_bytes()?), Some(issuer_header))
                 }
                 ProofAlgorithm::BLS12381_SHAKE256 => {
-                    let messages: Vec<BBSplusMessage> = payloads
-                        .0
-                        .iter()
-                        .map(|p| {
-                            BBSplusMessage::map_message_to_scalar_as_hash::<BBS_BLS12381_SHAKE256>(
-                                &serde_json::to_vec(&p.0).unwrap(),
-                                None,
-                            )
-                        })
-                        .collect();
-
-                    let proof = Signature::<BBS_BLS12381_SHAKE256>::BBSplus(proof);
-                    proof.verify(&pk, Some(&messages), None, Some(issuer_header))
+                    let proof = Signature::<BbsBls12381Shake256>::BBSplus(proof);
+                    proof.verify(&pk, Some(&payloads.to_bytes()?), Some(issuer_header))
                 }
                 _ => unreachable!(),
             };
 
-            match check {
-                true => Ok(()),
-                false => Err(CustomError::InvalidIssuedProof),
-            }
+            check.map_err(|e| CustomError::ProofVerificationError(e.to_string()))
         }
     }
 
@@ -232,55 +185,29 @@ impl BBSplusAlgorithm {
             let dec_pk: [u8; 96] = base64url_decode(&key_params.x).try_into().map_err(|_| {
                 CustomError::ProofGenerationError("key is not compatible".to_string())
             })?;
-            let pk = BBSplusPublicKey::from_bytes(&dec_pk);
+            let pk = BBSplusPublicKey::from_bytes(&dec_pk).map_err(|_| CustomError::InvalidJwk)?;
             let revealed_message_indexes = payloads.get_disclosed_indexes();
-            let signature = BBSplusSignature::from_bytes(signature.try_into().unwrap()).unwrap();
-
             let proof = match alg {
                 PresentationProofAlgorithm::BLS12381_SHA256_PROOF => {
-                    let messages: Vec<BBSplusMessage> = payloads
-                        .0
-                        .iter()
-                        .map(|p| {
-                            BBSplusMessage::map_message_to_scalar_as_hash::<BBS_BLS12381_SHA256>(
-                                &serde_json::to_vec(&p.0).unwrap(),
-                                None,
-                            )
-                        })
-                        .collect();
-                    PoKSignature::<BBS_BLS12381_SHA256>::proof_gen(
-                        &signature,
+                    PoKSignature::<BbsBls12381Sha256>::proof_gen(
                         &pk,
-                        Some(&messages),
-                        None,
-                        Some(&revealed_message_indexes),
+                        &signature,
                         Some(issuer_header),
                         Some(presentation_header),
-                        None,
-                    )
+                        Some(&payloads.to_bytes()?),
+                        Some(&revealed_message_indexes),
+                    ).map_err(|e| CustomError::ProofGenerationError(e.to_string()))?
                     .to_bytes()
                 }
                 PresentationProofAlgorithm::BLS12381_SHAKE256_PROOF => {
-                    let messages: Vec<BBSplusMessage> = payloads
-                        .0
-                        .iter()
-                        .map(|p| {
-                            BBSplusMessage::map_message_to_scalar_as_hash::<BBS_BLS12381_SHAKE256>(
-                                &serde_json::to_vec(&p.0).unwrap(),
-                                None,
-                            )
-                        })
-                        .collect();
-                    PoKSignature::<BBS_BLS12381_SHAKE256>::proof_gen(
-                        &signature,
+                    PoKSignature::<BbsBls12381Shake256>::proof_gen(
                         &pk,
-                        Some(&messages),
-                        None,
-                        Some(&revealed_message_indexes),
+                        &signature,
                         Some(issuer_header),
                         Some(presentation_header),
-                        None,
-                    )
+                        Some(&payloads.to_bytes()?),
+                        Some(&revealed_message_indexes),
+                    ).map_err(|e| CustomError::ProofGenerationError(e.to_string()))?
                     .to_bytes()
                 }
                 _ => unreachable!(),
@@ -321,48 +248,25 @@ impl BBSplusAlgorithm {
             let dec_pk: [u8; 96] = base64url_decode(&key_params.x).try_into().map_err(|_| {
                 CustomError::ProofGenerationError("key is not compatible".to_string())
             })?;
-            let pk = BBSplusPublicKey::from_bytes(&dec_pk);
+            let pk = BBSplusPublicKey::from_bytes(&dec_pk).map_err(|_| CustomError::InvalidJwk)?;
             let disclosed_indexes = payloads.get_disclosed_indexes();
-            let proof = BBSplusPoKSignature::from_bytes(proof.try_into().unwrap());
+            let proof = BBSplusPoKSignature::from_bytes(proof.try_into().map_err(|_| CustomError::InvalidJwk)?).map_err(|_| CustomError::InvalidJwk)?;
             let check = match alg {
                 PresentationProofAlgorithm::BLS12381_SHA256_PROOF => {
-                    let messages: Vec<BBSplusMessage> = payloads
-                        .get_disclosed_payloads()
-                        .iter()
-                        .map(|p| {
-                            BBSplusMessage::map_message_to_scalar_as_hash::<BBS_BLS12381_SHA256>(
-                                &serde_json::to_vec(p).unwrap(),
-                                None,
-                            )
-                        })
-                        .collect();
-                    let proof = PoKSignature::<BBS_BLS12381_SHA256>::BBSplus(proof);
+                    let proof = PoKSignature::<BbsBls12381Sha256>::BBSplus(proof);
                     proof.proof_verify(
                         &pk,
-                        Some(&messages),
-                        None,
+                        Some(&payloads.get_disclosed_payloads().to_bytes()?),
                         Some(&disclosed_indexes),
                         Some(issuer_header),
                         Some(presentation_header),
                     )
                 }
                 PresentationProofAlgorithm::BLS12381_SHAKE256_PROOF => {
-                    let messages: Vec<BBSplusMessage> = payloads
-                        .get_disclosed_payloads()
-                        .iter()
-                        .map(|p| {
-                            BBSplusMessage::map_message_to_scalar_as_hash::<BBS_BLS12381_SHAKE256>(
-                                &serde_json::to_vec(p).unwrap(),
-                                None,
-                            )
-                        })
-                        .collect();
-
-                    let proof = PoKSignature::<BBS_BLS12381_SHAKE256>::BBSplus(proof);
+                    let proof = PoKSignature::<BbsBls12381Shake256>::BBSplus(proof);
                     proof.proof_verify(
                         &pk,
-                        Some(&messages),
-                        None,
+                        Some(&payloads.get_disclosed_payloads().to_bytes()?),
                         Some(&disclosed_indexes),
                         Some(issuer_header),
                         Some(presentation_header),
@@ -371,10 +275,7 @@ impl BBSplusAlgorithm {
                 _ => unreachable!(),
             };
 
-            match check {
-                true => Ok(()),
-                false => Err(CustomError::InvalidPresentedProof),
-            }
+            check.map_err(|e| CustomError::ProofVerificationError(e.to_string()))
         }
     }
 }

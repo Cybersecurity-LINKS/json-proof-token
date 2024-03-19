@@ -16,7 +16,7 @@ use crate::{errors::CustomError, jwk::alg_parameters::JwkOctetKeyPairParameters}
 use serde::{Deserialize, Serialize};
 use zkryptium::{
     keys::pair::KeyPair,
-    schemes::algorithms::{BBS_BLS12381_SHA256, BBS_BLS12381_SHAKE256},
+    schemes::algorithms::{BbsBls12381Sha256, BbsBls12381Shake256}, utils::util::bbsplus_utils::generate_random_secret,
 };
 
 use super::{
@@ -66,10 +66,15 @@ pub struct Jwk {
 }
 
 impl Jwk {
+
+    const N: usize = 64;
+
     pub fn generate(key_type: KeyPairSubtype) -> Result<Self, CustomError> {
+        let ikm = generate_random_secret(Self::N);
+
         match key_type {
             KeyPairSubtype::BLS12381SHA256 => {
-                let keypair = KeyPair::<BBS_BLS12381_SHA256>::generate(None, None);
+                let keypair = KeyPair::<BbsBls12381Sha256>::generate(&ikm, None, None).map_err(|_| CustomError::JwkGenerationError("Keygen failed".to_owned()))?;
                 let pk = keypair.public_key().to_bytes();
                 let sk = keypair.private_key().to_bytes();
                 let okp_params = JwkOctetKeyPairParameters::new(
@@ -90,7 +95,7 @@ impl Jwk {
                 })
             }
             KeyPairSubtype::BLS12381SHAKE256 => {
-                let keypair = KeyPair::<BBS_BLS12381_SHAKE256>::generate(None, None);
+                let keypair = KeyPair::<BbsBls12381Shake256>::generate(&ikm, None, None).map_err(|_| CustomError::JwkGenerationError("Keygen failed".to_owned()))?;
                 let pk = keypair.public_key().to_bytes();
                 let sk = keypair.private_key().to_bytes();
                 let okp_params = JwkOctetKeyPairParameters::new(
