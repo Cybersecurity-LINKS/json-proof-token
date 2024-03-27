@@ -49,9 +49,7 @@ fn main() {
         serde_json::to_string_pretty(&bbs_jwk).unwrap()
     );
 
-    let issued_jwp = JwpIssuedBuilder::new()
-        .issuer_protected_header(issued_header)
-        .jpt_claims(jpt_claims)
+    let issued_jwp = JwpIssuedBuilder::new(issued_header, jpt_claims)
         .build(&bbs_jwk)
         .unwrap();
 
@@ -75,8 +73,7 @@ fn main() {
     presentation_header.set_aud(Some("https://recipient.example.com".to_owned()));
     presentation_header.set_nonce(Some("wrmBRkKtXjQ".to_owned()));
 
-    let presented_jwp = JwpPresentedBuilder::new(&decoded_issued_jwp)
-        .presentation_protected_header(presentation_header)
+    let presented_jwp = JwpPresentedBuilder::new(&decoded_issued_jwp, presentation_header)
         .set_undisclosed("vc.degree.name")
         .unwrap()
         .set_undisclosed("vc.degree.ciao[0].u1")

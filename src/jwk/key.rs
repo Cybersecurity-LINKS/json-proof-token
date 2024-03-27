@@ -17,7 +17,6 @@ use serde::{Deserialize, Serialize};
 use zkryptium::{
     keys::pair::KeyPair,
     schemes::algorithms::{BbsBls12381Sha256, BbsBls12381Shake256},
-    utils::util::bbsplus_utils::generate_random_secret,
 };
 
 use super::{
@@ -67,14 +66,11 @@ pub struct Jwk {
 }
 
 impl Jwk {
-    const N: usize = 64;
 
     pub fn generate(key_type: KeyPairSubtype) -> Result<Self, CustomError> {
-        let ikm = generate_random_secret(Self::N);
-
         match key_type {
             KeyPairSubtype::BLS12381G2Sha256 => {
-                let keypair = KeyPair::<BbsBls12381Sha256>::generate(&ikm, None, None)
+                let keypair = KeyPair::<BbsBls12381Sha256>::random()
                     .map_err(|_| CustomError::JwkGenerationError("Keygen failed".to_owned()))?;
                 let pk = keypair.public_key();
                 let (x, y) = pk.to_coordinates();
@@ -98,7 +94,7 @@ impl Jwk {
                 })
             }
             KeyPairSubtype::BLS12381G2Shake256 => {
-                let keypair = KeyPair::<BbsBls12381Shake256>::generate(&ikm, None, None)
+                let keypair = KeyPair::<BbsBls12381Shake256>::random()
                     .map_err(|_| CustomError::JwkGenerationError("Keygen failed".to_owned()))?;
                 let pk = keypair.public_key();
                 let (x, y) = pk.to_coordinates();
