@@ -62,11 +62,11 @@ impl JwpIssuedBuilder {
         }
     }
 
-    pub fn issuer_protected_header(&self) -> Option<&IssuerProtectedHeader> {
+    pub fn get_issuer_protected_header(&self) -> Option<&IssuerProtectedHeader> {
         self.issuer_protected_header.as_ref()
     }
 
-    pub fn payloads(&self) -> Option<&Payloads> {
+    pub fn get_payloads(&self) -> Option<&Payloads> {
         self.payloads.as_ref()
     }
 

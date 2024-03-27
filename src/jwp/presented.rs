@@ -57,27 +57,35 @@ pub struct JwpPresentedBuilder {
 }
 
 impl JwpPresentedBuilder {
-    pub fn new(issued_jwp: &JwpIssued, presentation_protected_header: PresentationProtectedHeader) -> Self {
+    pub fn new(issued_jwp: &JwpIssued) -> Self {
         Self {
             issuer_protected_header: issued_jwp.get_issuer_protected_header().clone(),
-            presentation_protected_header: Some(presentation_protected_header),
+            presentation_protected_header: None,
             payloads: issued_jwp.get_payloads().clone(),
             issuer_proof: issued_jwp.get_proof().to_vec(),
         }
     }
 
+    pub fn set_presentation_protected_header(
+        &mut self,
+        header: PresentationProtectedHeader,
+    ) -> &mut Self {
+        self.presentation_protected_header = Some(header);
+        self
+    }
+
     // Getter for issuer_protected_header
-    pub fn issuer_protected_header(&self) -> &IssuerProtectedHeader {
+    pub fn get_issuer_protected_header(&self) -> &IssuerProtectedHeader {
         &self.issuer_protected_header
     }
 
     // Getter for presentation_protected_header
-    pub fn presentation_protected_header(&self) -> Option<&PresentationProtectedHeader> {
+    pub fn get_presentation_protected_header(&self) -> Option<&PresentationProtectedHeader> {
         self.presentation_protected_header.as_ref()
     }
 
     // Getter for payloads
-    pub fn payloads(&self) -> &Payloads {
+    pub fn get_payloads(&self) -> &Payloads {
         &self.payloads
     }
 

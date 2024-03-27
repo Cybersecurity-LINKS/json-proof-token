@@ -73,7 +73,8 @@ fn main() {
     presentation_header.set_aud(Some("https://recipient.example.com".to_owned()));
     presentation_header.set_nonce(Some("wrmBRkKtXjQ".to_owned()));
 
-    let presented_jwp = JwpPresentedBuilder::new(&decoded_issued_jwp, presentation_header)
+    let presented_jwp = JwpPresentedBuilder::new(&decoded_issued_jwp)
+        .set_presentation_protected_header(presentation_header)
         .set_undisclosed("vc.degree.name")
         .unwrap()
         .set_undisclosed("vc.degree.ciao[0].u1")
