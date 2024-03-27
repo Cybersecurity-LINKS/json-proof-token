@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     encoding::{
         base64url_decode, base64url_encode, base64url_encode_serializable,
-        Base64UrlDecodedSerializable, SerializationType,
+        SerializationType,
     },
     errors::CustomError,
     jpa::{algs::PresentationProofAlgorithm, bbs_plus::BBSplusAlgorithm},
@@ -82,6 +82,21 @@ impl JwpPresentedBuilder {
             .ok_or(CustomError::SelectiveDisclosureError)?;
         self.payloads.set_undisclosed(index);
         Ok(self)
+    }
+
+    pub fn build_with_proof(&self, proof: Vec<u8>) -> Result<JwpPresented, CustomError> {
+        if let Some(presentation_protected_header) = self.presentation_protected_header.clone() {
+            Ok(JwpPresented {
+                issuer_protected_header: self.issuer_protected_header.clone(),
+                presentation_protected_header,
+                payloads: self.payloads.clone(),
+                proof,
+            })
+        } else {
+            Err(CustomError::IncompleteJwpBuild(
+                crate::errors::IncompleteJwpBuild::NoIssuerHeader,
+            ))
+        }
     }
 
     pub fn build(&self, jwk: &Jwk) -> Result<JwpPresented, CustomError> {
@@ -164,17 +179,8 @@ impl JwpPresentedDecoder {
                     encoded_payloads,
                     encoded_proof,
                 ) = expect_four!(jpt.splitn(4, '.'));
-                //TODO: this needs to be checked because doesn't return an error if the value is not deserializable into an IssuerProtectedHeader struct
-                let presentation_protected_header: PresentationProtectedHeader =
-                    Base64UrlDecodedSerializable::from_serializable_values(
-                        encoded_presentation_protected_header,
-                    )
-                    .deserialize::<PresentationProtectedHeader>();
-                let issuer_protected_header: IssuerProtectedHeader =
-                    Base64UrlDecodedSerializable::from_serializable_values(
-                        encoded_issuer_protected_header,
-                    )
-                    .deserialize::<IssuerProtectedHeader>();
+                let presentation_protected_header: PresentationProtectedHeader = serde_json::from_slice(&base64url_decode(encoded_presentation_protected_header)).map_err(|_| CustomError::SerializationError)?;
+                let issuer_protected_header: IssuerProtectedHeader = serde_json::from_slice(&base64url_decode(encoded_issuer_protected_header)).map_err(|_| CustomError::SerializationError)?;
                 let payloads = Payloads(
                     encoded_payloads
                         .splitn(issuer_protected_header.claims().unwrap().0.len(), "~")

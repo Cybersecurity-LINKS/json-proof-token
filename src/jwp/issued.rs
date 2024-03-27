@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     encoding::{
         base64url_decode, base64url_encode, base64url_encode_serializable,
-        Base64UrlDecodedSerializable, SerializationType,
+        SerializationType,
     },
     errors::CustomError,
     jpa::{algs::ProofAlgorithm, bbs_plus::BBSplusAlgorithm},
@@ -71,6 +71,26 @@ impl JwpIssuedBuilder {
         //Set payloads
         self.payloads = Some(payloads);
         self
+    }
+
+    pub fn build_with_proof(&self, proof: Vec<u8>) -> Result<JwpIssued, CustomError> {
+        if let Some(issuer_protected_header) = self.issuer_protected_header.clone() {
+            if let Some(payloads) = self.payloads.clone() {
+                Ok(JwpIssued {
+                    issuer_protected_header,
+                    payloads,
+                    proof,
+                })
+            } else {
+                Err(CustomError::IncompleteJwpBuild(
+                    crate::errors::IncompleteJwpBuild::NoClaimsAndPayloads,
+                ))
+            }
+        } else {
+            Err(CustomError::IncompleteJwpBuild(
+                crate::errors::IncompleteJwpBuild::NoIssuerHeader,
+            ))
+        }
     }
 
     pub fn build(&self, jwk: &Jwk) -> Result<JwpIssued, CustomError> {
@@ -139,13 +159,7 @@ impl JwpIssuedDecoder {
             SerializationType::COMPACT => {
                 let (encoded_issuer_protected_header, encoded_payloads, encoded_proof) =
                     expect_three!(jpt.splitn(3, '.'));
-                //TODO: this needs to be checked because doesn't return an error if the value is not deserializable into an IssuerProtectedHeader struct
-                let issuer_protected_header: IssuerProtectedHeader =
-                    Base64UrlDecodedSerializable::from_serializable_values(
-                        encoded_issuer_protected_header,
-                    )
-                    .deserialize::<IssuerProtectedHeader>();
-
+                let issuer_protected_header: IssuerProtectedHeader = serde_json::from_slice(&base64url_decode(encoded_issuer_protected_header)).map_err(|_| CustomError::SerializationError)?;
                 //TODO: this could not have much sense for now (maybe useful to handle blind signatures?)
                 let payloads = Payloads(
                     encoded_payloads
