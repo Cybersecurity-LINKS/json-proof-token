@@ -94,14 +94,6 @@ impl JwpPresentedBuilder {
         &self.issuer_proof
     }
 
-    // pub fn presentation_protected_header(
-    //     &mut self,
-    //     header: PresentationProtectedHeader,
-    // ) -> &mut Self {
-    //     self.presentation_protected_header = Some(header);
-    //     self
-    // }
-
     pub fn set_undisclosed(&mut self, claim: &str) -> Result<&mut Self, CustomError> {
         let index = self
             .issuer_protected_header
@@ -326,9 +318,12 @@ impl JwpPresented {
         // let encoded_issuer_header = base64url_encode_serializable(&self.issuer_protected_header);
         // let encoded_presentation_header = base64url_encode_serializable(&self.presentation_protected_header);
 
-        let issuer_header_oct = serde_json::to_vec(&self.issuer_protected_header).unwrap();
+        let issuer_header_oct = serde_json::to_vec(&self.issuer_protected_header)
+        .map_err(|_| CustomError::SerializationError)?;
+
         let presentation_header_oct =
-            serde_json::to_vec(&self.presentation_protected_header).unwrap();
+            serde_json::to_vec(&self.presentation_protected_header)
+            .map_err(|_| CustomError::SerializationError)?;
 
         let jwp = Self::serialize(
             serialization,

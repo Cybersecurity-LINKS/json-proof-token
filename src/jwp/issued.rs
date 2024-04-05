@@ -70,22 +70,6 @@ impl JwpIssuedBuilder {
         self.payloads.as_ref()
     }
 
-    // pub fn issuer_protected_header(&mut self, header: IssuerProtectedHeader) -> &mut Self {
-    //     self.issuer_protected_header = Some(header);
-    //     self
-    // }
-
-    // pub fn jpt_claims(&mut self, jpt_claims: JptClaims) -> &mut Self {
-    //     let (claims, payloads) = jpt_claims.get_claims_and_payloads();
-    //     //Set claims
-    //     self.issuer_protected_header
-    //         .as_mut()
-    //         .and_then(|h| Some(h.set_claims(Some(claims))));
-    //     //Set payloads
-    //     self.payloads = Some(payloads);
-    //     self
-    // }
-
     pub fn build_with_proof(&self, proof: Vec<u8>) -> Result<JwpIssued, CustomError> {
         if let Some(issuer_protected_header) = self.issuer_protected_header.clone() {
             if let Some(payloads) = self.payloads.clone() {
@@ -268,23 +252,11 @@ pub struct JwpIssued {
 }
 
 impl JwpIssued {
-    // pub fn new(issuer_protected_header: IssuerProtectedHeader, jpt_claims: JptClaims) -> Self {
-    //     let (claims, payloads) = jpt_claims.get_claims_and_payloads();
-    //     //Set claims
-    //     let mut issuer_protected_header = issuer_protected_header;
-    //     issuer_protected_header.set_claims(Some(claims));
-
-    //     Self {
-    //         issuer_protected_header,
-    //         payloads,
-    //         proof: vec![],
-    //     }
-    // }
-    /// Encode the currently crafted JWP
     pub fn encode(&self, serialization: SerializationType) -> Result<String, CustomError> {
         // let encoded_issuer_header = base64url_encode_serializable(&self.issuer_protected_header);
 
-        let issuer_header_oct = serde_json::to_vec(&self.issuer_protected_header).unwrap();
+        let issuer_header_oct = serde_json::to_vec(&self.issuer_protected_header)
+        .map_err(|_| CustomError::SerializationError)?;
 
         let jwp = Self::serialize(
             serialization,
