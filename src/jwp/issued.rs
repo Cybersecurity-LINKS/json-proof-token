@@ -16,8 +16,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     encoding::{
-        base64url_decode, base64url_encode, base64url_encode_serializable,
-        SerializationType,
+        base64url_decode, base64url_encode, base64url_encode_serializable, SerializationType,
     },
     errors::CustomError,
     jpa::{algs::ProofAlgorithm, bbs_plus::BBSplusAlgorithm},
@@ -156,7 +155,9 @@ impl JwpIssuedDecoder {
             SerializationType::COMPACT => {
                 let (encoded_issuer_protected_header, encoded_payloads, encoded_proof) =
                     expect_three!(jpt.splitn(3, '.'));
-                let issuer_protected_header: IssuerProtectedHeader = serde_json::from_slice(&base64url_decode(encoded_issuer_protected_header)).map_err(|_| CustomError::SerializationError)?;
+                let issuer_protected_header: IssuerProtectedHeader =
+                    serde_json::from_slice(&base64url_decode(encoded_issuer_protected_header))
+                        .map_err(|_| CustomError::SerializationError)?;
                 //TODO: this could not have much sense for now (maybe useful to handle blind signatures?)
                 let payloads = Payloads(
                     encoded_payloads
@@ -256,7 +257,7 @@ impl JwpIssued {
         // let encoded_issuer_header = base64url_encode_serializable(&self.issuer_protected_header);
 
         let issuer_header_oct = serde_json::to_vec(&self.issuer_protected_header)
-        .map_err(|_| CustomError::SerializationError)?;
+            .map_err(|_| CustomError::SerializationError)?;
 
         let jwp = Self::serialize(
             serialization,

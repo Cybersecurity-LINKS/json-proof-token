@@ -34,7 +34,6 @@ pub fn base64url_encode_serializable<T: Serialize>(value: T) -> String {
     base64url_encode(bytes)
 }
 
-
 pub struct EncondingKey {
     //TODO: family attribute implement something like this
     //             ProofAlgorithm::EdDSA => AlgorithmFamily::Ed,

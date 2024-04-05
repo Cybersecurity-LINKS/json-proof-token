@@ -16,8 +16,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     encoding::{
-        base64url_decode, base64url_encode, base64url_encode_serializable,
-        SerializationType,
+        base64url_decode, base64url_encode, base64url_encode_serializable, SerializationType,
     },
     errors::CustomError,
     jpa::{algs::PresentationProofAlgorithm, bbs_plus::BBSplusAlgorithm},
@@ -199,8 +198,14 @@ impl JwpPresentedDecoder {
                     encoded_payloads,
                     encoded_proof,
                 ) = expect_four!(jpt.splitn(4, '.'));
-                let presentation_protected_header: PresentationProtectedHeader = serde_json::from_slice(&base64url_decode(encoded_presentation_protected_header)).map_err(|_| CustomError::SerializationError)?;
-                let issuer_protected_header: IssuerProtectedHeader = serde_json::from_slice(&base64url_decode(encoded_issuer_protected_header)).map_err(|_| CustomError::SerializationError)?;
+                let presentation_protected_header: PresentationProtectedHeader =
+                    serde_json::from_slice(&base64url_decode(
+                        encoded_presentation_protected_header,
+                    ))
+                    .map_err(|_| CustomError::SerializationError)?;
+                let issuer_protected_header: IssuerProtectedHeader =
+                    serde_json::from_slice(&base64url_decode(encoded_issuer_protected_header))
+                        .map_err(|_| CustomError::SerializationError)?;
                 let payloads = Payloads(
                     encoded_payloads
                         .splitn(issuer_protected_header.claims().unwrap().0.len(), "~")
@@ -319,10 +324,9 @@ impl JwpPresented {
         // let encoded_presentation_header = base64url_encode_serializable(&self.presentation_protected_header);
 
         let issuer_header_oct = serde_json::to_vec(&self.issuer_protected_header)
-        .map_err(|_| CustomError::SerializationError)?;
+            .map_err(|_| CustomError::SerializationError)?;
 
-        let presentation_header_oct =
-            serde_json::to_vec(&self.presentation_protected_header)
+        let presentation_header_oct = serde_json::to_vec(&self.presentation_protected_header)
             .map_err(|_| CustomError::SerializationError)?;
 
         let jwp = Self::serialize(

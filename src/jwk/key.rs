@@ -66,7 +66,6 @@ pub struct Jwk {
 }
 
 impl Jwk {
-
     pub fn generate(key_type: KeyPairSubtype) -> Result<Self, CustomError> {
         match key_type {
             KeyPairSubtype::BLS12381G2Sha256 => {
