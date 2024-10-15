@@ -154,8 +154,8 @@ impl JwpPresentedBuilder {
         payloads: &Payloads,
     ) -> Result<Vec<u8>, CustomError> {
         let proof = match alg {
-            PresentationProofAlgorithm::BLS12381_SHA256_PROOF
-            | PresentationProofAlgorithm::BLS12381_SHAKE256_PROOF => {
+            PresentationProofAlgorithm::BBS_PROOF
+            | PresentationProofAlgorithm::BBS_SHAKE256_PROOF => {
                 BBSplusAlgorithm::generate_presentation_proof(
                     alg,
                     issuer_proof,
@@ -284,8 +284,8 @@ impl JwpPresentedDecoder {
         payloads: &Payloads,
     ) -> Result<(), CustomError> {
         let check = match alg {
-            PresentationProofAlgorithm::BLS12381_SHA256_PROOF
-            | PresentationProofAlgorithm::BLS12381_SHAKE256_PROOF => {
+            PresentationProofAlgorithm::BBS_PROOF
+            | PresentationProofAlgorithm::BBS_SHAKE256_PROOF => {
                 BBSplusAlgorithm::verify_presentation_proof(
                     alg,
                     &key,

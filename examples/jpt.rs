@@ -41,7 +41,7 @@ fn main() {
     jpt_claims.set_iss("https://issuer.example".to_owned());
     jpt_claims.set_claim(Some("vc"), custom_claims, true);
 
-    let issued_header = IssuerProtectedHeader::new(ProofAlgorithm::BLS12381_SHA256);
+    let issued_header = IssuerProtectedHeader::new(ProofAlgorithm::BBS);
 
     let bbs_jwk = Jwk::generate(KeyPairSubtype::BLS12381G2Sha256).unwrap();
     println!(

@@ -19,17 +19,12 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 #[allow(non_camel_case_types)]
 pub enum ProofAlgorithm {
-    ///TODO: we need two algorithms (BLS12381_SHA256 and BLS12381_SHAKE256)
+    ///BBS_SHAKE256 temporary name not included in the JPA draft 06
     /// We should also distinguish between the BBS algorithm standard and the one extended
-    #[serde(rename = "BBS-BLS12381-SHA256")]
-    BLS12381_SHA256,
-    #[serde(rename = "BBS-BLS12381-SHAKE256")]
-    BLS12381_SHAKE256,
-
-    // #[serde(rename = "BBS-BLS12381-SHA256-PROOF")]
-    // BLS12381_SHA256_PROOF,
-    // #[serde(rename = "BBS-BLS12381-SHAKE256-PROOF")]
-    // BLS12381_SHAKE256_PROOF,
+    #[serde(rename = "BBS")]
+    BBS,
+    #[serde(rename = "BBS-SHAKE256")]
+    BBS_SHAKE256,
     #[serde(rename = "SU-ES256")]
     SU_ES256,
     #[serde(rename = "MAC-H256")]
@@ -49,9 +44,9 @@ pub enum ProofAlgorithm {
 impl Into<PresentationProofAlgorithm> for ProofAlgorithm {
     fn into(self) -> PresentationProofAlgorithm {
         match self {
-            ProofAlgorithm::BLS12381_SHA256 => PresentationProofAlgorithm::BLS12381_SHA256_PROOF,
-            ProofAlgorithm::BLS12381_SHAKE256 => {
-                PresentationProofAlgorithm::BLS12381_SHAKE256_PROOF
+            ProofAlgorithm::BBS => PresentationProofAlgorithm::BBS_PROOF,
+            ProofAlgorithm::BBS_SHAKE256 => {
+                PresentationProofAlgorithm::BBS_SHAKE256_PROOF
             }
             ProofAlgorithm::SU_ES256 => PresentationProofAlgorithm::SU_ES256,
             ProofAlgorithm::MAC_H256 => PresentationProofAlgorithm::MAC_H256,
@@ -67,8 +62,8 @@ impl Into<PresentationProofAlgorithm> for ProofAlgorithm {
 impl fmt::Display for ProofAlgorithm {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let variant_str = match self {
-            ProofAlgorithm::BLS12381_SHA256 => "BBS-BLS12381-SHA256",
-            ProofAlgorithm::BLS12381_SHAKE256 => "BBS-BLS12381-SHAKE256",
+            ProofAlgorithm::BBS => "BBS",
+            ProofAlgorithm::BBS_SHAKE256 => "BBS-SHAKE256",
             ProofAlgorithm::SU_ES256 => "SU-ES256",
             ProofAlgorithm::MAC_H256 => "MAC-H256",
             ProofAlgorithm::MAC_H384 => "MAC-H384",
@@ -86,8 +81,8 @@ impl FromStr for ProofAlgorithm {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "BBS-BLS12381-SHA256" => Ok(ProofAlgorithm::BLS12381_SHA256),
-            "BBS-BLS12381-SHAKE256" => Ok(ProofAlgorithm::BLS12381_SHAKE256),
+            "BBS" => Ok(ProofAlgorithm::BBS),
+            "BBS-SHAKE256" => Ok(ProofAlgorithm::BBS_SHAKE256),
             "SU-ES256" => Ok(ProofAlgorithm::SU_ES256),
             "MAC-H256" => Ok(ProofAlgorithm::MAC_H256),
             "MAC-H384" => Ok(ProofAlgorithm::MAC_H384),
@@ -103,10 +98,11 @@ impl FromStr for ProofAlgorithm {
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 #[allow(non_camel_case_types)]
 pub enum PresentationProofAlgorithm {
-    #[serde(rename = "BBS-BLS12381-SHA256-PROOF")]
-    BLS12381_SHA256_PROOF,
-    #[serde(rename = "BBS-BLS12381-SHAKE256-PROOF")]
-    BLS12381_SHAKE256_PROOF,
+    ///BBS_PROOF temporary name not included in the JPA draft 06
+    #[serde(rename = "BBS-PROOF")]
+    BBS_PROOF,
+    #[serde(rename = "BBS-SHAKE256-PROOF")]
+    BBS_SHAKE256_PROOF,
 
     #[serde(rename = "SU-ES256")]
     SU_ES256,
@@ -127,8 +123,8 @@ pub enum PresentationProofAlgorithm {
 impl fmt::Display for PresentationProofAlgorithm {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let variant_str = match self {
-            PresentationProofAlgorithm::BLS12381_SHA256_PROOF => "BBS-BLS12381-SHA256-PROOF",
-            PresentationProofAlgorithm::BLS12381_SHAKE256_PROOF => "BBS-BLS12381-SHAKE256-PROOF",
+            PresentationProofAlgorithm::BBS_PROOF => "BBS-PROOF",
+            PresentationProofAlgorithm::BBS_SHAKE256_PROOF => "BBS-SHAKE256-PROOF",
             PresentationProofAlgorithm::SU_ES256 => "SU-ES256",
             PresentationProofAlgorithm::MAC_H256 => "MAC-H256",
             PresentationProofAlgorithm::MAC_H384 => "MAC-H384",
@@ -146,9 +142,9 @@ impl FromStr for PresentationProofAlgorithm {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "BBS-BLS12381-SHA256-PROOF" => Ok(PresentationProofAlgorithm::BLS12381_SHA256_PROOF),
-            "BBS-BLS12381-SHAKE256-PROOF" => {
-                Ok(PresentationProofAlgorithm::BLS12381_SHAKE256_PROOF)
+            "BBS-PROOF" => Ok(PresentationProofAlgorithm::BBS_PROOF),
+            "BBS-SHAKE256-PROOF" => {
+                Ok(PresentationProofAlgorithm::BBS_SHAKE256_PROOF)
             }
             "SU-ES256" => Ok(PresentationProofAlgorithm::SU_ES256),
             "MAC-H256" => Ok(PresentationProofAlgorithm::MAC_H256),

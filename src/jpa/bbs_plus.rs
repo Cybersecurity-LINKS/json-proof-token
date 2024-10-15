@@ -87,7 +87,7 @@ impl BBSplusAlgorithm {
             .map_err(|_| CustomError::SerializationError)?;
 
             let proof = match alg {
-                ProofAlgorithm::BLS12381_SHA256 => Signature::<BbsBls12381Sha256>::sign(
+                ProofAlgorithm::BBS => Signature::<BbsBls12381Sha256>::sign(
                     Some(&payloads.to_bytes()?),
                     &sk,
                     &pk,
@@ -95,7 +95,7 @@ impl BBSplusAlgorithm {
                 )
                 .map_err(|e| CustomError::ProofGenerationError(e.to_string()))?
                 .to_bytes(),
-                ProofAlgorithm::BLS12381_SHAKE256 => Signature::<BbsBls12381Shake256>::sign(
+                ProofAlgorithm::BBS_SHAKE256 => Signature::<BbsBls12381Shake256>::sign(
                     Some(&payloads.to_bytes()?),
                     &sk,
                     &pk,
@@ -154,11 +154,11 @@ impl BBSplusAlgorithm {
             })?)
             .map_err(|_| CustomError::SerializationError)?;
             let check = match alg {
-                ProofAlgorithm::BLS12381_SHA256 => {
+                ProofAlgorithm::BBS => {
                     let proof = Signature::<BbsBls12381Sha256>::BBSplus(proof);
                     proof.verify(&pk, Some(&payloads.to_bytes()?), Some(issuer_header))
                 }
-                ProofAlgorithm::BLS12381_SHAKE256 => {
+                ProofAlgorithm::BBS_SHAKE256 => {
                     let proof = Signature::<BbsBls12381Shake256>::BBSplus(proof);
                     proof.verify(&pk, Some(&payloads.to_bytes()?), Some(issuer_header))
                 }
@@ -209,7 +209,7 @@ impl BBSplusAlgorithm {
                 BBSplusPublicKey::from_coordinates(&x, &y).map_err(|_| CustomError::InvalidJwk)?;
             let revealed_message_indexes = payloads.get_disclosed_indexes();
             let proof = match alg {
-                PresentationProofAlgorithm::BLS12381_SHA256_PROOF => {
+                PresentationProofAlgorithm::BBS_PROOF => {
                     PoKSignature::<BbsBls12381Sha256>::proof_gen(
                         &pk,
                         &signature,
@@ -221,7 +221,7 @@ impl BBSplusAlgorithm {
                     .map_err(|e| CustomError::ProofGenerationError(e.to_string()))?
                     .to_bytes()
                 }
-                PresentationProofAlgorithm::BLS12381_SHAKE256_PROOF => {
+                PresentationProofAlgorithm::BBS_SHAKE256_PROOF => {
                     PoKSignature::<BbsBls12381Shake256>::proof_gen(
                         &pk,
                         &signature,
@@ -284,7 +284,7 @@ impl BBSplusAlgorithm {
             })?)
             .map_err(|_| CustomError::InvalidJwk)?;
             let check = match alg {
-                PresentationProofAlgorithm::BLS12381_SHA256_PROOF => {
+                PresentationProofAlgorithm::BBS_PROOF => {
                     let proof = PoKSignature::<BbsBls12381Sha256>::BBSplus(proof);
                     proof.proof_verify(
                         &pk,
@@ -294,7 +294,7 @@ impl BBSplusAlgorithm {
                         Some(presentation_header),
                     )
                 }
-                PresentationProofAlgorithm::BLS12381_SHAKE256_PROOF => {
+                PresentationProofAlgorithm::BBS_SHAKE256_PROOF => {
                     let proof = PoKSignature::<BbsBls12381Shake256>::BBSplus(proof);
                     proof.proof_verify(
                         &pk,

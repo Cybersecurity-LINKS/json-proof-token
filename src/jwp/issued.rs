@@ -124,7 +124,7 @@ impl JwpIssuedBuilder {
         payloads: &Payloads,
     ) -> Result<Vec<u8>, CustomError> {
         let proof = match alg {
-            ProofAlgorithm::BLS12381_SHA256 | ProofAlgorithm::BLS12381_SHAKE256 => {
+            ProofAlgorithm::BBS | ProofAlgorithm::BBS_SHAKE256 => {
                 BBSplusAlgorithm::generate_issuer_proof(alg, payloads, key, issuer_header_oct)?
             }
             ProofAlgorithm::SU_ES256 => todo!(),
@@ -228,7 +228,7 @@ impl JwpIssuedDecoder {
         payloads: &Payloads,
     ) -> Result<(), CustomError> {
         let check = match alg {
-            ProofAlgorithm::BLS12381_SHA256 | ProofAlgorithm::BLS12381_SHAKE256 => {
+            ProofAlgorithm::BBS | ProofAlgorithm::BBS_SHAKE256 => {
                 BBSplusAlgorithm::verify_issuer_proof(alg, &key, proof, issuer_header_oct, payloads)
             }
             ProofAlgorithm::SU_ES256 => todo!(),
