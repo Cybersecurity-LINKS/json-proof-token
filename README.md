@@ -12,9 +12,9 @@
 ## Description
 
 Rust library implementing the new [JOSE Working Group](https://datatracker.ietf.org/wg/jose/documents/) drafts:
-- [JSON Web Proof](https://datatracker.ietf.org/doc/html/draft-ietf-jose-json-web-proof)
-- [JSON Proof Algorithms](https://datatracker.ietf.org/doc/html/draft-ietf-jose-json-proof-algorithms) 
-- [JSON Proof Token](https://datatracker.ietf.org/doc/html/draft-ietf-jose-json-proof-token)
+- [JSON Web Proof](https://datatracker.ietf.org/doc/html/draft-ietf-jose-json-web-proof-03)
+- [JSON Proof Algorithms](https://datatracker.ietf.org/doc/html/draft-ietf-jose-json-proof-algorithms-03) 
+- [JSON Proof Token](https://datatracker.ietf.org/doc/html/draft-ietf-jose-json-proof-token-03)
 
 The specification work for this can be found [here](https://github.com/json-web-proofs/json-web-proofs).
 
