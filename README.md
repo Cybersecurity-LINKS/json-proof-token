@@ -13,7 +13,7 @@
 
 Rust library implementing the new [JOSE Working Group](https://datatracker.ietf.org/wg/jose/documents/) drafts:
 - [JSON Web Proof](https://datatracker.ietf.org/doc/html/draft-ietf-jose-json-web-proof-03)
-- [JSON Proof Algorithms](https://datatracker.ietf.org/doc/html/draft-ietf-jose-json-proof-algorithms-03) 
+- [JSON Proof Algorithms](https://datatracker.ietf.org/doc/html/draft-ietf-jose-json-proof-algorithms-08) 
 - [JSON Proof Token](https://datatracker.ietf.org/doc/html/draft-ietf-jose-json-proof-token-03)
 
 The specification work for this can be found [here](https://github.com/json-web-proofs/json-web-proofs).
@@ -24,7 +24,7 @@ The specification work for this can be found [here](https://github.com/json-web-
 
 JWK is defined in [RFC 7517](https://tools.ietf.org/html/rfc7517).
 
-> **NOTE**: To represent **BLS** keys this implementation refers to [draft-ietf-cose-bls-key-representations-05](https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations-05).
+> **NOTE**: To represent **BLS** keys this implementation refers to [draft-ietf-cose-bls-key-representations-05](https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations-06).
 
 JWKs are currently used in the proof generation and verification of JWPs.
 
@@ -55,7 +55,7 @@ The standard list of Elliptic Curves can be found [here](https://www.iana.org/as
 |   `X448`  |    ✘    |
 
 
-This list is made from the currenlty active draft [Barreto-Lynn-Scott Elliptic Curve Key Representations for JOSE and COSE - v05](https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations-05#section-2.2.3).
+This list is made from the currenlty active draft [Barreto-Lynn-Scott Elliptic Curve Key Representations for JOSE and COSE - v05](https://datatracker.ietf.org/doc/html/draft-ietf-cose-bls-key-representations-06#section-2.2.3).
 
 |  Curve Name | Support |
 |:---------:|:-------:|
@@ -85,8 +85,6 @@ The `BBS-SHAKE256` and `BBS-SHAKE256-PROOF` values are temporary and await an up
 |:---------:|:-------:|:-------:|
 |    `BBS`    |    ✔    |         |
 |    `BBS-SHAKE256`    |    ✔    |         |
-|    `BBS-PROOF`    |    ✔    |         |
-|    `BBS-SHAKE256-PROOF`    |    ✔    |         |
 
 #### MAC
 
@@ -133,7 +131,7 @@ Add this to your Cargo.toml:
 
 ```
 [dependencies]
-json-proof-token = "0.3.5"
+json-proof-token = "0.4.0"
 ```
 
 ### Example

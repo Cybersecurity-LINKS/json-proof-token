@@ -33,8 +33,8 @@ pub fn check_presentation_alg_curve_compatibility(
 ) -> bool {
     match (alg, crv) {
         // (Algorithm::Signature(SignatureAlgorithm::ES256), EllipticCurveTypes::P256) => true, EXAMPLE
-        (PresentationProofAlgorithm::BBS_PROOF, EllipticCurveTypes::BLS12381G2) => true,
-        (PresentationProofAlgorithm::BBS_SHAKE256_PROOF, EllipticCurveTypes::BLS12381G2) => {
+        (PresentationProofAlgorithm::BBS, EllipticCurveTypes::BLS12381G2) => true,
+        (PresentationProofAlgorithm::BBS_SHAKE256, EllipticCurveTypes::BLS12381G2) => {
             true
         }
         _ => false,

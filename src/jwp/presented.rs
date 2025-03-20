@@ -154,8 +154,8 @@ impl JwpPresentedBuilder {
         payloads: &Payloads,
     ) -> Result<Vec<u8>, CustomError> {
         let proof = match alg {
-            PresentationProofAlgorithm::BBS_PROOF
-            | PresentationProofAlgorithm::BBS_SHAKE256_PROOF => {
+            PresentationProofAlgorithm::BBS
+            | PresentationProofAlgorithm::BBS_SHAKE256 => {
                 BBSplusAlgorithm::generate_presentation_proof(
                     alg,
                     issuer_proof,
@@ -166,6 +166,7 @@ impl JwpPresentedBuilder {
                 )?
             }
             PresentationProofAlgorithm::SU_ES256 => todo!(),
+            PresentationProofAlgorithm::SU_ES384 => todo!(),
             PresentationProofAlgorithm::MAC_H256 => todo!(),
             PresentationProofAlgorithm::MAC_H384 => todo!(),
             PresentationProofAlgorithm::MAC_H512 => todo!(),
@@ -284,8 +285,8 @@ impl JwpPresentedDecoder {
         payloads: &Payloads,
     ) -> Result<(), CustomError> {
         let check = match alg {
-            PresentationProofAlgorithm::BBS_PROOF
-            | PresentationProofAlgorithm::BBS_SHAKE256_PROOF => {
+            PresentationProofAlgorithm::BBS
+            | PresentationProofAlgorithm::BBS_SHAKE256 => {
                 BBSplusAlgorithm::verify_presentation_proof(
                     alg,
                     &key,
@@ -296,6 +297,7 @@ impl JwpPresentedDecoder {
                 )
             }
             PresentationProofAlgorithm::SU_ES256 => todo!(),
+            PresentationProofAlgorithm::SU_ES384 => todo!(),
             PresentationProofAlgorithm::MAC_H256 => todo!(),
             PresentationProofAlgorithm::MAC_H384 => todo!(),
             PresentationProofAlgorithm::MAC_H512 => todo!(),

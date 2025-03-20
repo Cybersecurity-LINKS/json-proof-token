@@ -18,25 +18,37 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 #[allow(non_camel_case_types)]
+///Proof algorithms for Issued JWP,
+///see https://datatracker.ietf.org/doc/html/draft-ietf-jose-json-proof-algorithms-08#name-initial-registry-contents
 pub enum ProofAlgorithm {
-    ///BBS_SHAKE256 temporary name not included in the JPA draft 06
-    /// We should also distinguish between the BBS algorithm standard and the one extended
+    ///BBS using SHA-256
     #[serde(rename = "BBS")]
     BBS,
+    ///BBS using SHAKE-256, temporary name not included in the JPA draft 08
     #[serde(rename = "BBS-SHAKE256")]
     BBS_SHAKE256,
+    ///Single-Use JWP using ES384
     #[serde(rename = "SU-ES256")]
     SU_ES256,
+    ///Single-Use JWP using ES512
+    #[serde(rename = "SU-ES384")]
+    SU_ES384,
+    ///MAC-H256
     #[serde(rename = "MAC-H256")]
     MAC_H256,
+    ///MAC-H384
     #[serde(rename = "MAC-H384")]
     MAC_H384,
+    ///MAC-H512
     #[serde(rename = "MAC-H512")]
     MAC_H512,
+    ///MAC-K25519
     #[serde(rename = "MAC-K25519")]
     MAC_K25519,
+    ///MAC-K448
     #[serde(rename = "MAC-K448")]
     MAC_K448,
+    ///MAC-H256K
     #[serde(rename = "MAC-H256K")]
     MAC_H256K,
 }
@@ -44,11 +56,10 @@ pub enum ProofAlgorithm {
 impl Into<PresentationProofAlgorithm> for ProofAlgorithm {
     fn into(self) -> PresentationProofAlgorithm {
         match self {
-            ProofAlgorithm::BBS => PresentationProofAlgorithm::BBS_PROOF,
-            ProofAlgorithm::BBS_SHAKE256 => {
-                PresentationProofAlgorithm::BBS_SHAKE256_PROOF
-            }
+            ProofAlgorithm::BBS => PresentationProofAlgorithm::BBS,
+            ProofAlgorithm::BBS_SHAKE256 => PresentationProofAlgorithm::BBS_SHAKE256,
             ProofAlgorithm::SU_ES256 => PresentationProofAlgorithm::SU_ES256,
+            ProofAlgorithm::SU_ES384 => PresentationProofAlgorithm::SU_ES384,
             ProofAlgorithm::MAC_H256 => PresentationProofAlgorithm::MAC_H256,
             ProofAlgorithm::MAC_H384 => PresentationProofAlgorithm::MAC_H384,
             ProofAlgorithm::MAC_H512 => PresentationProofAlgorithm::MAC_H512,
@@ -71,6 +82,7 @@ impl fmt::Display for ProofAlgorithm {
             ProofAlgorithm::MAC_K25519 => "MAC-K25519",
             ProofAlgorithm::MAC_K448 => "MAC-K448",
             ProofAlgorithm::MAC_H256K => "MAC-H256K",
+            ProofAlgorithm::SU_ES384 => "SU-ES384",
         };
         write!(f, "{}", variant_str)
     }
@@ -84,6 +96,7 @@ impl FromStr for ProofAlgorithm {
             "BBS" => Ok(ProofAlgorithm::BBS),
             "BBS-SHAKE256" => Ok(ProofAlgorithm::BBS_SHAKE256),
             "SU-ES256" => Ok(ProofAlgorithm::SU_ES256),
+            "SU-ES384" => Ok(ProofAlgorithm::SU_ES384),
             "MAC-H256" => Ok(ProofAlgorithm::MAC_H256),
             "MAC-H384" => Ok(ProofAlgorithm::MAC_H384),
             "MAC-H512" => Ok(ProofAlgorithm::MAC_H512),
@@ -97,25 +110,37 @@ impl FromStr for ProofAlgorithm {
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 #[allow(non_camel_case_types)]
+///Proof algorithms for Presented JWP,
+///see https://datatracker.ietf.org/doc/html/draft-ietf-jose-json-proof-algorithms-08#name-initial-registry-contents
 pub enum PresentationProofAlgorithm {
-    ///BBS_PROOF temporary name not included in the JPA draft 06
-    #[serde(rename = "BBS-PROOF")]
-    BBS_PROOF,
-    #[serde(rename = "BBS-SHAKE256-PROOF")]
-    BBS_SHAKE256_PROOF,
-
+    ///BBS using SHA-256
+    #[serde(rename = "BBS")]
+    BBS,
+    ///BBS using SHAKE-256, temporary name not included in the JPA draft 08
+    #[serde(rename = "BBS-SHAKE256")]
+    BBS_SHAKE256,
+    ///Single-Use JWP using ES256
     #[serde(rename = "SU-ES256")]
     SU_ES256,
+    ///Single-Use JWP using ES384
+    #[serde(rename = "SU-ES384")]
+    SU_ES384,
+    ///MAC-H256
     #[serde(rename = "MAC-H256")]
     MAC_H256,
+    ///MAC-H384
     #[serde(rename = "MAC-H384")]
     MAC_H384,
+    ///MAC-H512
     #[serde(rename = "MAC-H512")]
     MAC_H512,
+    ///MAC-K25519
     #[serde(rename = "MAC-K25519")]
     MAC_K25519,
+    ///MAC-K448
     #[serde(rename = "MAC-K448")]
     MAC_K448,
+    ///MAC-H256K
     #[serde(rename = "MAC-H256K")]
     MAC_H256K,
 }
@@ -123,15 +148,17 @@ pub enum PresentationProofAlgorithm {
 impl fmt::Display for PresentationProofAlgorithm {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let variant_str = match self {
-            PresentationProofAlgorithm::BBS_PROOF => "BBS-PROOF",
-            PresentationProofAlgorithm::BBS_SHAKE256_PROOF => "BBS-SHAKE256-PROOF",
+            PresentationProofAlgorithm::BBS => "BBS",
+            PresentationProofAlgorithm::BBS_SHAKE256 => "BBS-SHAKE256",
             PresentationProofAlgorithm::SU_ES256 => "SU-ES256",
+            PresentationProofAlgorithm::SU_ES384 => "SU-ES384",
             PresentationProofAlgorithm::MAC_H256 => "MAC-H256",
             PresentationProofAlgorithm::MAC_H384 => "MAC-H384",
             PresentationProofAlgorithm::MAC_H512 => "MAC-H512",
             PresentationProofAlgorithm::MAC_K25519 => "MAC-K25519",
             PresentationProofAlgorithm::MAC_K448 => "MAC-K448",
             PresentationProofAlgorithm::MAC_H256K => "MAC-H256K",
+            
         };
         write!(f, "{}", variant_str)
     }
@@ -142,11 +169,10 @@ impl FromStr for PresentationProofAlgorithm {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "BBS-PROOF" => Ok(PresentationProofAlgorithm::BBS_PROOF),
-            "BBS-SHAKE256-PROOF" => {
-                Ok(PresentationProofAlgorithm::BBS_SHAKE256_PROOF)
-            }
+            "BBS-PROOF" => Ok(PresentationProofAlgorithm::BBS),
+            "BBS-SHAKE256-PROOF" => Ok(PresentationProofAlgorithm::BBS_SHAKE256),
             "SU-ES256" => Ok(PresentationProofAlgorithm::SU_ES256),
+            "SU-ES384" => Ok(PresentationProofAlgorithm::SU_ES384),
             "MAC-H256" => Ok(PresentationProofAlgorithm::MAC_H256),
             "MAC-H384" => Ok(PresentationProofAlgorithm::MAC_H384),
             "MAC-H512" => Ok(PresentationProofAlgorithm::MAC_H512),
