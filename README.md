@@ -79,7 +79,7 @@ The supported algorithm are defined in in the [JPA](https://datatracker.ietf.org
 
 #### BBS
 
-The `BBS-SHAKE256` and `BBS-SHAKE256-PROOF` values are temporary and await an update to the official draft that will define names to support  the ciphersuite  `BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_H2G_HM2S_` specified in [BBS+](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-07#name-bls12-381-ciphersuites).:
+The `BBS-SHAKE256` value is temporary and awaits an update to the official draft that will define names to support  the ciphersuite  `BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_H2G_HM2S_` specified in [BBS+](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-08#name-bls12-381-ciphersuites).:
 
 | Algorithm | Support | Remarks |
 |:---------:|:-------:|:-------:|
