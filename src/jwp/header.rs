@@ -1,4 +1,4 @@
-// Copyright 2023 Fondazione LINKS
+// Copyright 2025 Fondazione LINKS
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -369,7 +369,8 @@ mod tests {
                 "x": "AizYfy-snuLWBAQjzm5UJcmXkNe4DPVbcqFha7i7hgmpiDgGHVUdqqM8YWmWkzi-DBSTXPozzlvnB1TZXcgXtYPla9M1iyK3evsD3Eoyo3ClR1_I_Pfmlk_signHOz9i",
                 "y": "A8PoKJou9-4t93kYDlIX_BGMgAqjIaZIW5TRQwusD4lDhcmSZy9hY5Sl2NxERhA8ERq2NLklV6dethvprgZ3hKfzrjU97MtkcY2ql-390o08o_C475nIAXqtgDqZwg-X",
                 "d": "UFjZc6H5vhHAmPcchdlRLnfNKmSCbnqDylT3aKZYSW4"
-            }
+            },
+            "nonce": "wrmBRkKtXjQ"
         });
 
         let jwk: Jwk = serde_json::from_value(json!({
@@ -386,6 +387,8 @@ mod tests {
         assert_eq!(header.crit(), Some(&vec!["critical_extension_1".to_owned(), "critical_extension_2".to_owned()]));
         assert_eq!(header.presentation_key(), Some(jwk));
         assert_eq!(header.iss(), Some(&"example.com".to_owned()));
+        assert_eq!(header.aud(), Some(&"audience_example".to_owned()));
+        assert_eq!(header.nonce(), Some(&"wrmBRkKtXjQ".to_owned()));
 
     }
 
@@ -394,11 +397,11 @@ mod tests {
         let mut  header = IssuerProtectedHeader::new(ProofAlgorithm::BBS);
         let claims: Claims = serde_json::from_value(json!(["iat", "exp", "family_name", "given_name", "email", "address", "age_over_21"]))
             .expect("Failed to deserialize Claims");
-        header.set_kid( Some("HjfcpyjuZQ-O8Ye2hQnNbT9RbbnrobptdnExR0DUjU8".to_owned()));
-        header.set_cid( Some("example.com/cid/123".to_owned()));
-        header.set_claims( Some(claims));
-        header.set_crit( Some(vec!["critical_extension_1".to_owned(), "critical_extension_2".to_owned()]));
-        header.set_iss( Some("example.com".to_owned()));
+        header.set_kid(Some("HjfcpyjuZQ-O8Ye2hQnNbT9RbbnrobptdnExR0DUjU8".to_owned()));
+        header.set_cid(Some("example.com/cid/123".to_owned()));
+        header.set_claims(Some(claims));
+        header.set_crit(Some(vec!["critical_extension_1".to_owned(), "critical_extension_2".to_owned()]));
+        header.set_iss(Some("example.com".to_owned()));
         
         let json = json!({
             "kid": "HjfcpyjuZQ-O8Ye2hQnNbT9RbbnrobptdnExR0DUjU8",
@@ -422,6 +425,33 @@ mod tests {
         });
 
        let header_json: IssuerProtectedHeader = serde_json::from_value(json).expect("Failed to deserialize IssuerProtectedHeader");
+       assert_eq!(header, header_json);
+
+    }
+    #[test]
+    fn test_set_presentation_protected_header() {
+        let mut  header = PresentationProtectedHeader::new(PresentationProofAlgorithm::BBS_SHAKE256);
+
+        header.set_kid(Some("HjfcpyjuZQ-O8Ye2hQnNbT9RbbnrobptdnExR0DUjU8".to_owned()));
+        header.set_crit(Some(vec!["critical_extension_1".to_owned(), "critical_extension_2".to_owned()]));
+        header.set_iss(Some("example.com".to_owned()));
+        header.set_aud(Some("audience_example".to_owned()));
+        header.set_nonce(Some("wrmBRkKtXjQ".to_owned()));
+        header.set_typ(Some("JPT".to_owned()));
+        let json = json!({
+            "kid": "HjfcpyjuZQ-O8Ye2hQnNbT9RbbnrobptdnExR0DUjU8",
+            "alg": "BBS-SHAKE256",
+            "typ": "JPT",
+            "iss": "example.com",
+            "aud": "audience_example",
+            "crit": [
+                "critical_extension_1",
+                "critical_extension_2",
+            ],
+            "nonce": "wrmBRkKtXjQ"
+        });
+
+       let header_json: PresentationProtectedHeader = serde_json::from_value(json).expect("Failed to deserialize PresentationProtectedHeader");
        assert_eq!(header, header_json);
 
     }

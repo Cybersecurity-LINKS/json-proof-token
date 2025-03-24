@@ -1,4 +1,4 @@
-// Copyright 2023 Fondazione LINKS
+// Copyright 2025 Fondazione LINKS
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -240,6 +240,7 @@ impl JwpPresentedDecoder {
                 })
             }
             SerializationType::JSON => todo!(),
+            SerializationType::CBOR => todo!(),
         }
     }
 
@@ -396,8 +397,141 @@ impl JwpPresented {
                 )
             }
             SerializationType::JSON => todo!(),
+            SerializationType::CBOR => todo!(),
         };
 
         jwp
     }
+}
+
+
+#[cfg(test)] 
+mod tests {
+
+    use crate::{
+        encoding::SerializationType,
+        jpa::algs::{PresentationProofAlgorithm, ProofAlgorithm},
+        jpt::claims::JptClaims,
+        jwk::{key::Jwk, types::KeyPairSubtype},
+        jwp::{
+            header::{IssuerProtectedHeader, PresentationProtectedHeader},
+            issued::{JwpIssuedBuilder, JwpIssuedDecoder},
+            presented::{JwpPresentedBuilder, JwpPresentedDecoder},
+        },
+    };
+
+    #[test]
+    fn test_jwp_presented(){
+        let custom_claims = serde_json::json!({
+            "degree": {
+                "type": "BachelorDegree",
+                "name": "Bachelor of Science and Arts",
+                },
+            "name": "John Doe"
+        });
+    
+        let mut jpt_claims = JptClaims::new();
+        jpt_claims.set_iss("https://issuer.example".to_owned());
+        jpt_claims.set_claim(Some("vc"), custom_claims, true);
+    
+        let issued_header = IssuerProtectedHeader::new(ProofAlgorithm::BBS);
+    
+        let bbs_jwk = Jwk::generate(KeyPairSubtype::BLS12381G2Sha256).unwrap();
+    
+        let issued_jwp = JwpIssuedBuilder::new(issued_header, jpt_claims)
+            .build(&bbs_jwk)
+            .unwrap();
+    
+        let compact_issued_jwp = issued_jwp.encode(SerializationType::COMPACT).unwrap();
+    
+        let decoded_issued_jwp =
+            JwpIssuedDecoder::decode(&compact_issued_jwp, SerializationType::COMPACT)
+                .unwrap()
+                .verify(&bbs_jwk.to_public().unwrap())
+                .unwrap();
+    
+        let mut presentation_header = PresentationProtectedHeader::new(PresentationProofAlgorithm::BBS);
+        presentation_header.set_aud(Some("https://recipient.example.com".to_owned()));
+        presentation_header.set_nonce(Some("wrmBRkKtXjQ".to_owned()));
+    
+        let presented_jwp = JwpPresentedBuilder::new(&decoded_issued_jwp)
+            .set_presentation_protected_header(presentation_header)
+            .build(&bbs_jwk.to_public().unwrap())
+            .unwrap();
+    
+        let compact_presented_jwp = presented_jwp.encode(SerializationType::COMPACT).unwrap();
+        
+        let decoded_presented_jwp =
+            JwpPresentedDecoder::decode(&compact_presented_jwp, SerializationType::COMPACT)
+                .unwrap()
+                .verify(&bbs_jwk.to_public().unwrap())
+                .unwrap();
+
+        assert_eq!(presented_jwp, decoded_presented_jwp);
+
+    }
+
+    #[test]
+    fn test_jwp_presented_selective_disclosure(){
+        let custom_claims = serde_json::json!({
+            "degree": {
+                "type": "BachelorDegree",
+                "name": "Bachelor of Science and Arts",
+                "ciao": [
+                    {"u1": "value1"},
+                    {"u2": "value2"}
+                    ]
+                },
+            "name": "John Doe"
+        });
+    
+        let mut jpt_claims = JptClaims::new();
+        jpt_claims.set_iss("https://issuer.example".to_owned());
+        jpt_claims.set_claim(Some("vc"), custom_claims, true);
+    
+        let issued_header = IssuerProtectedHeader::new(ProofAlgorithm::BBS);
+    
+        let bbs_jwk = Jwk::generate(KeyPairSubtype::BLS12381G2Sha256).unwrap();
+    
+        let issued_jwp = JwpIssuedBuilder::new(issued_header, jpt_claims)
+            .build(&bbs_jwk)
+            .unwrap();
+    
+        let compact_issued_jwp = issued_jwp.encode(SerializationType::COMPACT).unwrap();
+    
+        let decoded_issued_jwp =
+            JwpIssuedDecoder::decode(&compact_issued_jwp, SerializationType::COMPACT)
+                .unwrap()
+                .verify(&bbs_jwk.to_public().unwrap())
+                .unwrap();
+        
+        let mut presentation_header = PresentationProtectedHeader::new(
+            decoded_issued_jwp
+                .get_issuer_protected_header()
+                .alg()
+                .into(),
+        );
+        presentation_header.set_aud(Some("https://recipient.example.com".to_owned()));
+        presentation_header.set_nonce(Some("wrmBRkKtXjQ".to_owned()));
+    
+        let presented_jwp = JwpPresentedBuilder::new(&decoded_issued_jwp)
+            .set_presentation_protected_header(presentation_header)
+            .set_undisclosed("vc.degree.name")
+            .unwrap()
+            .set_undisclosed("vc.degree.ciao[0].u1")
+            .unwrap()
+            .set_undisclosed("vc.name")
+            .unwrap()
+            .build(&bbs_jwk.to_public().unwrap())
+            .unwrap();
+    
+        let presented_claims = presented_jwp.get_claims().unwrap();
+
+        assert!(presented_claims.0.contains(&"vc.degree.name".to_owned()));
+        assert!(presented_claims.0.contains(&"vc.degree.ciao[0].u1".to_owned()));
+        assert!(presented_claims.0.contains(&"vc.name".to_owned()));
+        assert!(!presented_claims.0.contains(&"vc.degree.ciao[0].u2".to_owned()));
+
+    }
+
 }
