@@ -1,4 +1,4 @@
-// Copyright 2023 Fondazione LINKS
+// Copyright 2025 Fondazione LINKS
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ use serde::Serialize;
 pub enum SerializationType {
     COMPACT,
     JSON,
+    CBOR,
 }
 
 pub fn base64url_encode<T: AsRef<[u8]>>(bytes: T) -> String {

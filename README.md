@@ -106,6 +106,7 @@ These are defined [here](https://datatracker.ietf.org/doc/html/draft-ietf-jose-j
 |:----------------:|:---------:|
 | Compact        |  ✔    |
 | JSON   |  ✘    |
+| CBOR   |  ✘    |
 
 
 
@@ -138,5 +139,7 @@ json-proof-token = "0.4.0"
 Take a look at the [examples](https://github.com/Cybersecurity-LINKS/json-proof-token/tree/main/examples).
 
 ## Tests
-
-TBD
+To run the tests
+```sh
+cargo test
+```

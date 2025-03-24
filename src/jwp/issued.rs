@@ -1,4 +1,4 @@
-// Copyright 2023 Fondazione LINKS
+// Copyright 2025 Fondazione LINKS
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -191,6 +191,7 @@ impl JwpIssuedDecoder {
                 })
             }
             SerializationType::JSON => todo!(),
+            SerializationType::CBOR => todo!(),
         }
     }
 
@@ -328,8 +329,56 @@ impl JwpIssued {
                 )
             }
             SerializationType::JSON => todo!(),
+            SerializationType::CBOR => todo!(),
         };
 
         jwp
     }
+}
+
+
+#[cfg(test)] 
+mod tests {
+    use crate::encoding::SerializationType;
+    use crate::jpt::claims::JptClaims;
+    use crate::jpa::algs::ProofAlgorithm;
+    use crate::jwk::key::Jwk;
+    use crate::jwk::types::KeyPairSubtype;
+    use crate::jwp::header::IssuerProtectedHeader;
+    use crate::jwp::issued::{JwpIssuedBuilder, JwpIssuedDecoder};
+
+    #[test]
+    fn test_jwp_issued() {
+        let custom_claims = serde_json::json!({
+            "degree": {
+                "type": "BachelorDegree",
+                "name": "Bachelor of Science and Arts",
+                },
+            "name": "John Doe"
+        });
+    
+        let mut jpt_claims = JptClaims::new();
+        jpt_claims.set_iss("https://issuer.example".to_owned());
+        jpt_claims.set_claim(Some("vc"), custom_claims, true);
+    
+        let issued_header = IssuerProtectedHeader::new(ProofAlgorithm::BBS);
+    
+        let bbs_jwk = Jwk::generate(KeyPairSubtype::BLS12381G2Sha256).unwrap();
+
+        let issued_jwp = JwpIssuedBuilder::new(issued_header, jpt_claims)
+            .build(&bbs_jwk)
+            .unwrap();
+    
+        let compact_issued_jwp = issued_jwp.encode(SerializationType::COMPACT).unwrap();
+    
+        let decoded_issued_jwp =
+            JwpIssuedDecoder::decode(&compact_issued_jwp, SerializationType::COMPACT)
+                .unwrap()
+                .verify(&bbs_jwk.to_public().unwrap())
+                .unwrap();
+    
+        assert_eq!(issued_jwp, decoded_issued_jwp);
+
+    }
+
 }
