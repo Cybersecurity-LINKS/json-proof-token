@@ -66,14 +66,16 @@ This list is made from the currenlty active draft [Barreto-Lynn-Scott Elliptic C
 
 ### JSON Web Proof Algorithms
 
-The supported algorithm are defined in in the [JPA](https://datatracker.ietf.org/doc/html/draft-ietf-jose-json-proof-algorithms) specification.
+The supported algorithm are defined in in the [JPA](https://datatracker.ietf.org/doc/html/draft-ietf-jose-json-proof-algorithms#name-single-use) specification.
 
 > NOTE: Keep in mind that these specifications are in the early stages, and there is a high likelihood that they will undergo significant changes in the future.
 
 #### Single Use
 | Algorithm | Support | Remarks |
 |:---------:|:-------:|:-------:|
-|   `SU-ES256`   |    ✘    |   Named [here](https://datatracker.ietf.org/doc/html/draft-ietf-jose-json-proof-algorithms#section-6.1.10)       |
+|   `SU-ES256`   |    ✘    |     |
+|   `SU-ES384`   |    ✘    |     |
+|   `SU-ES3512`   |    ✘    |     |
 
 
 

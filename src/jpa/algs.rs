@@ -27,12 +27,15 @@ pub enum ProofAlgorithm {
     ///BBS using SHAKE-256, temporary name not included in the JPA draft 08
     #[serde(rename = "BBS-SHAKE256")]
     BBS_SHAKE256,
-    ///Single-Use JWP using ES384
+    ///Single-Use JWP using ES256
     #[serde(rename = "SU-ES256")]
     SU_ES256,
-    ///Single-Use JWP using ES512
+    ///Single-Use JWP using ES384
     #[serde(rename = "SU-ES384")]
     SU_ES384,
+    ///Single-Use JWP using ES512
+    #[serde(rename = "SU-ES512")]
+    SU_ES512,
     ///MAC-H256
     #[serde(rename = "MAC-H256")]
     MAC_H256,
@@ -60,6 +63,7 @@ impl Into<PresentationProofAlgorithm> for ProofAlgorithm {
             ProofAlgorithm::BBS_SHAKE256 => PresentationProofAlgorithm::BBS_SHAKE256,
             ProofAlgorithm::SU_ES256 => PresentationProofAlgorithm::SU_ES256,
             ProofAlgorithm::SU_ES384 => PresentationProofAlgorithm::SU_ES384,
+            ProofAlgorithm::SU_ES512 => PresentationProofAlgorithm::SU_ES512,
             ProofAlgorithm::MAC_H256 => PresentationProofAlgorithm::MAC_H256,
             ProofAlgorithm::MAC_H384 => PresentationProofAlgorithm::MAC_H384,
             ProofAlgorithm::MAC_H512 => PresentationProofAlgorithm::MAC_H512,
@@ -76,13 +80,15 @@ impl fmt::Display for ProofAlgorithm {
             ProofAlgorithm::BBS => "BBS",
             ProofAlgorithm::BBS_SHAKE256 => "BBS-SHAKE256",
             ProofAlgorithm::SU_ES256 => "SU-ES256",
+            ProofAlgorithm::SU_ES384 => "SU-ES384",
+            ProofAlgorithm::SU_ES512 => "SU-ES512",
             ProofAlgorithm::MAC_H256 => "MAC-H256",
             ProofAlgorithm::MAC_H384 => "MAC-H384",
             ProofAlgorithm::MAC_H512 => "MAC-H512",
             ProofAlgorithm::MAC_K25519 => "MAC-K25519",
             ProofAlgorithm::MAC_K448 => "MAC-K448",
             ProofAlgorithm::MAC_H256K => "MAC-H256K",
-            ProofAlgorithm::SU_ES384 => "SU-ES384",
+            
         };
         write!(f, "{}", variant_str)
     }
@@ -125,6 +131,9 @@ pub enum PresentationProofAlgorithm {
     ///Single-Use JWP using ES384
     #[serde(rename = "SU-ES384")]
     SU_ES384,
+    ///Single-Use JWP using ES512
+    #[serde(rename = "SU-ES512")]
+    SU_ES512,
     ///MAC-H256
     #[serde(rename = "MAC-H256")]
     MAC_H256,
@@ -152,13 +161,13 @@ impl fmt::Display for PresentationProofAlgorithm {
             PresentationProofAlgorithm::BBS_SHAKE256 => "BBS-SHAKE256",
             PresentationProofAlgorithm::SU_ES256 => "SU-ES256",
             PresentationProofAlgorithm::SU_ES384 => "SU-ES384",
+            PresentationProofAlgorithm::SU_ES512 => "SU-ES512",
             PresentationProofAlgorithm::MAC_H256 => "MAC-H256",
             PresentationProofAlgorithm::MAC_H384 => "MAC-H384",
             PresentationProofAlgorithm::MAC_H512 => "MAC-H512",
             PresentationProofAlgorithm::MAC_K25519 => "MAC-K25519",
             PresentationProofAlgorithm::MAC_K448 => "MAC-K448",
             PresentationProofAlgorithm::MAC_H256K => "MAC-H256K",
-            
         };
         write!(f, "{}", variant_str)
     }

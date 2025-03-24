@@ -167,6 +167,7 @@ impl JwpPresentedBuilder {
             }
             PresentationProofAlgorithm::SU_ES256 => todo!(),
             PresentationProofAlgorithm::SU_ES384 => todo!(),
+            PresentationProofAlgorithm::SU_ES512 => todo!(),
             PresentationProofAlgorithm::MAC_H256 => todo!(),
             PresentationProofAlgorithm::MAC_H384 => todo!(),
             PresentationProofAlgorithm::MAC_H512 => todo!(),
@@ -299,6 +300,7 @@ impl JwpPresentedDecoder {
             }
             PresentationProofAlgorithm::SU_ES256 => todo!(),
             PresentationProofAlgorithm::SU_ES384 => todo!(),
+            PresentationProofAlgorithm::SU_ES512 => todo!(),
             PresentationProofAlgorithm::MAC_H256 => todo!(),
             PresentationProofAlgorithm::MAC_H384 => todo!(),
             PresentationProofAlgorithm::MAC_H512 => todo!(),

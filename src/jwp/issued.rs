@@ -129,6 +129,7 @@ impl JwpIssuedBuilder {
                     }
             ProofAlgorithm::SU_ES256 => todo!(),
             ProofAlgorithm::SU_ES384 => todo!(),
+            ProofAlgorithm::SU_ES512 => todo!(),
             ProofAlgorithm::MAC_H256 => todo!(),
             ProofAlgorithm::MAC_H384 => todo!(),
             ProofAlgorithm::MAC_H512 => todo!(),
@@ -235,6 +236,7 @@ impl JwpIssuedDecoder {
             }
             ProofAlgorithm::SU_ES256 => todo!(),
             ProofAlgorithm::SU_ES384 => todo!(),
+            ProofAlgorithm::SU_ES512 => todo!(),
             ProofAlgorithm::MAC_H256 => todo!(),
             ProofAlgorithm::MAC_H384 => todo!(),
             ProofAlgorithm::MAC_H512 => todo!(),
